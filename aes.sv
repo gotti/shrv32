@@ -14,22 +14,19 @@ logic [127:0]subBytesIn;
 logic [127:0]subBytesOut;
 subBytes subBytes(
     .i(subBytesIn),
-    .o(subBytesOut)
-);
+    .o(subBytesOut) );
 
 logic [127:0]shiftRowsIn;
 logic [127:0]shiftRowsOut;
 shiftRows shiftRows(
     .i(shiftRowsIn),
-    .o(shiftRowsOut)
-);
+    .o(shiftRowsOut) );
 
 logic [127:0]mixColumnsIn;
 logic [127:0]mixColumnsOut;
 MixColumns mixColumns(
     .i(mixColumnsIn),
-    .o(mixColumnsOut)
-);
+    .o(mixColumnsOut) );
 
 logic [127:0]roundOut;
 logic [127:0]out;
@@ -38,11 +35,22 @@ assign shiftRowsIn = subBytesOut;
 assign mixColumnsIn = shiftRowsOut;
 assign out = counter==4'd10 ? shiftRowsOut : mixColumnsOut;
 assign roundOut = out ^ secret; //TODO
-
+//TODO
+logic [127:0]roundKey;
+logic [127:0]nextRoundKey;
+keyExpand keyExpand(
+    .roundKey(roundKey),
+    .counter(counter),
+    .nextRoundKey(nextRoundKey)
+);
 
 always_ff @(posedge clock) begin
     dataReg <= counter==4'b0 ? plaintext^secret : roundOut;
     cipher <= counter==4'd10 ? dataReg : 128'h0;
+end
+always_ff @(negedge clock) begin
+    counter <= counter+1;
+    roundKey <= nextRoundKey;
 end
 endmodule
 
@@ -57,11 +65,11 @@ module keyExpand(
     input var logic [3:0] counter,
     output var logic[127:0] nextRoundKey );
 logic [31:0] s;
-logic [31:0] rcon[3:0] = '{32'h1000000, 32'h2000000, 32'h4000000, 32'h8000000, 32'h20000000, 32'h40000000, 32'h80000000, 32'h1b000000, 32'h36000000};
+logic [31:0] rcon [9:0] = '{32'h1_00_00_00, 32'h2_00_00_00, 32'h4_00_00_00, 32'h8_00_00_00, 32'h10_00_00_00, 32'h20_00_00_00, 32'h40_00_00_00, 32'h80_00_00_00, 32'h1b_00_00_00, 32'h36_00_00_00 };
 assign s[7:0] = sbox(roundKey[31:24]);
 assign s[15:8] = sbox(roundKey[7:0]);
 assign s[23:16] = sbox(roundKey[15:8]);
-assign s[32:24] = sbox(roundKey[23:16]);
+assign s[31:24] = sbox(roundKey[23:16]);
 
 assign nextRoundKey[31:0] = roundKey[31:0] ^ s ^ rcon[counter];
 assign nextRoundKey[63:32] = roundKey[31:0] ^ s ^ rcon[counter] ^ roundKey[95:64];

@@ -80,7 +80,7 @@ controller controller(
     .opcode(INST[6:2]),
     .funct3(INST[14:12]),
     .funct7(INST[31:25]),
-    .WE(regWE),
+    .regWE(regWE),
     .outmem(outmem),
     .aluneg(aluneg),
     .isImm(isImm),
