@@ -21,8 +21,15 @@ clk_gen clk_gen(
     .CLK_DC(CLK_DC),
     .CLK_EX(CLK_EX),
     .CLK_MA(CLK_MA),
-    .CLK_WB(CLK_WB)
-);
+    .CLK_WB(CLK_WB) );
+logic clockAESEncrypt;
+logic clockAESDecrypt;
+logic [2:0]extensionModuleSelect;
+extensionClk extensionClk(
+    .CLK(CLK),
+    .extensionModuleSelect(extensionModuleSelect),
+    .clockAESEncrypt(clockAESEncrypt),
+    .clockAESDecrypt(clockAESDecrypt) );
 pc pc(
     .RST(RST),
     .CLK_WB(CLK_WB),
@@ -58,7 +65,7 @@ register register(
     .RST(RST),
     .CLK_DC(CLK_DC),
     .CLK_WB(CLK_WB),
-    .CLK_AES(CLK),
+    .CLK_AES(clockAESEncrypt),
     .A1(INST[19:15]),
     .A2(INST[24:20]),
     .A3(INST[11:7]),
@@ -94,7 +101,8 @@ controller controller(
     .rwmem(rwmem),
     .memWE(memWE),
     .byteena(byteena),
-    .alucontrol(alucontrol)
+    .alucontrol(alucontrol),
+    .extensionModuleSelect(extensionModuleSelect)
 );
 logic [31:0]aluout;
 logic [31:0]aluin;
