@@ -34,7 +34,7 @@ assign subBytesIn = dataReg;
 assign shiftRowsIn = subBytesOut;
 assign mixColumnsIn = shiftRowsOut;
 assign out = counter==4'd10 ? shiftRowsOut : mixColumnsOut;
-assign roundOut = out ^ secret; //TODO
+assign roundOut = out ^ roundKey; //TODO
 //TODO
 logic [127:0]roundKey;
 logic [127:0]nextRoundKey;
@@ -60,9 +60,7 @@ logic [7:0] sboxTable [255:0] = '{8'h63, 8'h7c, 8'h77, 8'h7b, 8'hf2, 8'h6b, 8'h6
 return sboxTable[i];
 endfunction
 
-module keyExpand(
-    input var logic [127:0] roundKey,
-    input var logic [3:0] counter,
+module keyExpand( input var logic [127:0] roundKey, input var logic [3:0] counter,
     output var logic[127:0] nextRoundKey );
 logic [31:0] s;
 logic [31:0] rcon [9:0] = '{32'h1_00_00_00, 32'h2_00_00_00, 32'h4_00_00_00, 32'h8_00_00_00, 32'h10_00_00_00, 32'h20_00_00_00, 32'h40_00_00_00, 32'h80_00_00_00, 32'h1b_00_00_00, 32'h36_00_00_00 };
