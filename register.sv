@@ -24,8 +24,8 @@ logic [127:0]aes_secret;
 logic [127:0]aes_cipher;
 aes aes(
     .clock(CLK_AES),
-    .plaintext({96'b0,generalRegisters[1]}),
-    .secret({96'b0,generalRegisters[2]}),
+    .plaintext({128'h0102030405060708090a0b0c0d0e0f10}),
+    .secret({128'h02030405060708090a0b0c0d0e0f1011}),
     .cipher(aes_cipher) );
 
 always_ff @(posedge CLK_DC) begin

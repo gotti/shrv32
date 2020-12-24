@@ -1,10 +1,14 @@
 module MixColumns(
     input var logic [127:0] i,
     output var logic [127:0] o );
+//assign {o[7:0],o[39:32],o[71:64],o[103:96]} = mixColumn({i[7:0],i[39:32],i[71:64],i[103:96]});
 assign o[31:0] = mixColumn(i[31:0]);
 assign o[63:32] = mixColumn(i[63:32]);
 assign o[95:64] = mixColumn(i[95:64]);
 assign o[127:96] = mixColumn(i[127:96]);
+/*assign o[63:32] = mixColumn(i[63:32]);
+assign o[95:64] = mixColumn(i[95:64]);
+assign o[127:96] = mixColumn(i[127:96]);*/
 
 function automatic [31:0] mixColumn(
     input var logic [31:0]i);
@@ -13,6 +17,10 @@ assign o[7:0] = m02(i[7:0]) ^ m03(i[15:8]) ^ i[23:16] ^ i[31:24];
 assign o[15:8] = i[7:0] ^ m02(i[15:8]) ^ m03(i[23:16]) ^ i[31:24];
 assign o[23:16] = i[7:0] ^ i[15:8] ^ m02(i[23:16]) ^ m03(i[31:24]);
 assign o[32:24] = m03(i[7:0]) ^ i[15:8] ^ i[23:16] ^ m02(i[31:24]);*/
+/*return {m02(i[7:0]) ^ m03(i[15:8]) ^ i[23:16] ^ i[31:24],
+        i[7:0] ^ m02(i[15:8]) ^ m03(i[23:16]) ^ i[31:24],
+        i[7:0] ^ i[15:8] ^ m02(i[23:16]) ^ m03(i[31:24]),
+        m03(i[7:0]) ^ i[15:8] ^ i[23:16] ^ m02(i[31:24])};*/
 return {m03(i[7:0]) ^ i[15:8] ^ i[23:16] ^ m02(i[31:24]),
         i[7:0] ^ i[15:8] ^ m02(i[23:16]) ^ m03(i[31:24]),
         i[7:0] ^ m02(i[15:8]) ^ m03(i[23:16]) ^ i[31:24],
