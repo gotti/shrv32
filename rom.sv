@@ -10,6 +10,7 @@ always_ff @(posedge CLK) begin
         32'h0: RD<=32'h00100093;
         32'h1: RD<=32'h00100113;
         32'h2: RD<=32'h0000000b;
+        32'h3: RD<=32'h0000100b;
         default: RD<=32'h0;
     endcase
     //32'b 1000 0101 | 0000 | 0111

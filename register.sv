@@ -3,6 +3,7 @@ module register(
     input var logic CLK_DC,
     input var logic CLK_WB,
     input var logic CLK_AES,
+    input var logic CLK_IAES,
     input var logic [4:0]A1,
     input var logic [4:0]A2,
     input var logic [4:0]A3,
@@ -22,11 +23,17 @@ assign RD2 = d2;
 logic [127:0]aes_plaintext;
 logic [127:0]aes_secret;
 logic [127:0]aes_cipher;
+logic [127:0]aes_invplaintext;
 aes aes(
     .clock(CLK_AES),
     .plaintext({128'h0102030405060708090a0b0c0d0e0f10}),
     .secret({128'h02030405060708090a0b0c0d0e0f1011}),
     .cipher(aes_cipher) );
+invAes invAes(
+    .clock(CLK_IAES),
+    .cipher({128'he4692b0ce80373980afc9fe579f5ee9c}),
+    .secret({128'h02030405060708090a0b0c0d0e0f1011}),
+    .plaintext(aes_invplaintext) );
 
 always_ff @(posedge CLK_DC) begin
     d1 <= generalRegisters[A1];

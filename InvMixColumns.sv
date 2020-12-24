@@ -1,6 +1,6 @@
 module InvMixColumns(
-    input var logic [127:0],
-    output var logic [127:0] o );
+    input var logic [127:0]i,
+    output var logic [127:0]o );
 assign o[31:0] = invMixColumn(i[31:0]);
 assign o[63:32] = invMixColumn(i[63:32]);
 assign o[95:64] = invMixColumn(i[95:64]);
@@ -48,7 +48,7 @@ function automatic [7:0] m0d(
 return {in[4] ^ in[5] ^ in[7],
         in[3] ^ in[4] ^ in[6] ^ in[7],
         in[2] ^ in[3] ^ in[5] ^ in[6],
-        in[1] ^ in[2] ^ in[4] ^ in[5],
+        in[1] ^ in[2] ^ in[4] ^ in[5] ^ in[7],
         in[0] ^ in[1] ^ in[3] ^ in[5] ^ in[6] ^ in[7],
         in[0] ^ in[2] ^ in[6],
         in[1] ^ in[5] ^ in[7],
@@ -60,18 +60,13 @@ function automatic [7:0] m0e(
 return {in[4] ^ in[5] ^ in[6],
         in[3] ^ in[4] ^ in[5] ^ in[7],
         in[2] ^ in[3] ^ in[4] ^ in[6],
-        in[1] ^ in[2] ^ in[3],
-        in[0] ^ in[1] ^ in[2],
+        in[1] ^ in[2] ^ in[3] ^ in[5],
+        in[0] ^ in[1] ^ in[2] ^ in[5] ^ in[6],
         in[0] ^ in[1] ^ in[6],
         in[0] ^ in[5],
         in[5] ^ in[6] ^ in[7]};
 endfunction
 
-function automatic [7:0] m0d(
-    input var logic [7:0] in);
-return {
-};
-endfunction
 
 function automatic [7:0] m03(
     input var logic [7:0] m02in);

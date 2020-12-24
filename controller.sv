@@ -145,7 +145,7 @@ always_comb begin
             aluneg = 1'b0;
             isImm = 1'b1;
             immtype = 2'b0;
-            pcsr = 1'b0;
+            pcsr = 1'b1;
             isoutr1 = 1'b1;
             isbr = 1'b1;
             isjal = 1'b0;

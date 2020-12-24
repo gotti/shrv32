@@ -66,6 +66,7 @@ register register(
     .CLK_DC(CLK_DC),
     .CLK_WB(CLK_WB),
     .CLK_AES(clockAESEncrypt),
+    .CLK_IAES(clockAESEncrypt),
     .A1(INST[19:15]),
     .A2(INST[24:20]),
     .A3(INST[11:7]),
