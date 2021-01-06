@@ -6,22 +6,22 @@ module pointDouble(
     output var logic [255:0] y2,
     output var logic [255:0] z2
 );
-wire b;
-assign b = x1 + x2;
-wire c;
-assign c = x1*x1;
-wire d;
-assign d = y1*y1;
-wire e;
-assign e = 256'h7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed - (c + d);
-wire f;
-assign f = c - d;
-wire j;
-assign j = f - b;//b is a
-wire k;
-assign k = b*b + e;
-assign x2 = j*k;
-assign y2 = f*e;
-assign z2 = f*j;
+wire [255:0]b;
+assign b = modularAddition(x1,x2);
+wire [255:0]c;
+assign c = montgomeryModularMultiplication(x1,x1);
+wire [255:0]d;
+assign d = montgomeryModularMultiplication(y1,y1);
+wire [255:0]e;
+assign e = modularSubtraction(256'h7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed,modularAddition(c,d));
+wire [255:0]f;
+assign f = modularSubtraction(c,d);
+wire [255:0]j;
+assign j = modularSubtraction(f,b);//b is a
+wire [255:0]k;
+assign k = modularAddition(montgomeryModularMultiplication(b,b),e);
+assign x2 = montgomeryModularMultiplication(j,k);
+assign y2 = montgomeryModularMultiplication(f,e);
+assign z2 = montgomeryModularMultiplication(f,j);
 
 endmodule

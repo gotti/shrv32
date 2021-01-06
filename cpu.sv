@@ -1,7 +1,9 @@
 module cpu(
     input var CLK,
     input var RST,
-    output var logic [7:0]LED );
+    output var logic [7:0]LED,
+    output var logic uartTxPin = 1'b1
+);
 
 logic pcWE = 1'b1;
 logic [31:0]RPC;
@@ -63,6 +65,7 @@ logic iswb = 1'b0;
 assign  regWB = (pcsr==1'b1) ? ((iswb==1'b1) ? brcontout : aluormemor1) : incPC ;
 register register(
     .RST(RST),
+    .CLK(CLK),
     .CLK_DC(CLK_DC),
     .CLK_WB(CLK_WB),
     .CLK_AES(clockAESEncrypt),
@@ -74,8 +77,10 @@ register register(
     .WB(regWB),
     .RD1(D1),
     .RD2(D2),
-    .LED(LED)
+    .LED(LED),
+    .uartTxPin(uartTxPin)
 );
+
 logic [9:0]alucontrol;
 logic aluneg;
 logic isImm = 1'b0;
