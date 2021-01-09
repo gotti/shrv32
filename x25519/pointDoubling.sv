@@ -1,4 +1,4 @@
-module pointDouble(
+module pointDoubling(
     input var logic [255:0] x1,
     input var logic [255:0] y1,
     input var logic [255:0] z1,

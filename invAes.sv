@@ -3,7 +3,10 @@ module invAes(
     input var logic clock,
     output var logic [127:0] plaintext,
     input var logic [127:0] secret,
-    input var logic [127:0] cipher );
+    input var logic [127:0] cipher,
+    input var logic we,
+    output var logic busy
+    );
 
 logic [3:0]counter = 4'b0;
 //function [255:0] sbox(input [255:0] sboxinput);
@@ -36,6 +39,7 @@ assign shiftRowsIn = counter==4'h1 ? mixColumnsIn : mixColumnsOut;//TODO
 assign subBytesIn = shiftRowsOut;
 assign roundOut = subBytesOut; //TODO
 //TODO
+//
 logic [127:0] roundKey [10:0];
 keyExpand keyExpand0(
     .roundKey(secret),
@@ -92,6 +96,34 @@ keyExpand keyExpand10(
     .counter(10),
     .nextRoundKey(roundKey[10])
 );
+assign plaintext = dataReg;
+always_comb begin
+    busy = 0;
+    nextCounter = 0;
+    nextState = state;
+    nextDataReg = dataReg;
+    if(state == stateIdle && we) begin
+        nextState = stateCalc;
+        busy = 1;
+        nextCounter = 0;
+    end else begin
+        busy = 1;
+        if(counter == 9) begin
+            nextCounter = 0;
+            nextState = stateIdle;
+        end else begin
+            nextCounter = counter +1;
+            nextDataReg = counter==4'b0 ? plaintext^secret : roundOut;
+        end
+    end
+end
+
+always_ff @(posedge clock) begin
+    counter <= nextCounter;
+    roundKey <= nextRoundKey;
+    dataReg <= nextCounter==4'hb ? nextDataReg^secret : nextDataReg;
+end
+/*
 always_ff @(posedge clock) begin
     dataReg <= counter==4'b0 ? cipher : roundOut;
     plaintext <= counter==4'hb ? dataReg^secret : 128'h0;
@@ -99,7 +131,7 @@ end
 always_ff @(negedge clock) begin
     counter <= counter+1;
 end
-
+*/
 function automatic [3:0][3:0][7:0] bytes2matrix(
     input var logic [127:0]i );
     return '{'{i[31:24], i[63:56], i[95:88], i[127:120]},

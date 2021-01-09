@@ -24,14 +24,7 @@ clk_gen clk_gen(
     .CLK_EX(CLK_EX),
     .CLK_MA(CLK_MA),
     .CLK_WB(CLK_WB) );
-logic clockAESEncrypt;
-logic clockAESDecrypt;
-logic [2:0]extensionModuleSelect;
-extensionClk extensionClk(
-    .CLK(CLK),
-    .extensionModuleSelect(extensionModuleSelect),
-    .clockAESEncrypt(clockAESEncrypt),
-    .clockAESDecrypt(clockAESDecrypt) );
+
 pc pc(
     .RST(RST),
     .CLK_WB(CLK_WB),
@@ -68,8 +61,6 @@ register register(
     .CLK(CLK),
     .CLK_DC(CLK_DC),
     .CLK_WB(CLK_WB),
-    .CLK_AES(clockAESEncrypt),
-    .CLK_IAES(clockAESEncrypt),
     .A1(INST[19:15]),
     .A2(INST[24:20]),
     .A3(INST[11:7]),
@@ -79,6 +70,23 @@ register register(
     .RD2(D2),
     .LED(LED),
     .uartTxPin(uartTxPin)
+);
+
+logic reg256WE, reg256WB;
+logic [255:0] XD1, XD2, XD3;
+assign reg256WB = XD3;
+reg256 reg256(
+    .RST(RST),
+    .CLK(CLK),
+    .CLK_DC(CLK_DC),
+    .CLK_WB(CLK_WB),
+    .A1(INST[19:15]),
+    .A2(INST[24:20]),
+    .A3(INST[11:7]),
+    .WE(reg256WE),
+    .WB(reg256WB),
+    .RD1(XD1),
+    .RD2(XD2)
 );
 
 logic [9:0]alucontrol;
@@ -126,6 +134,17 @@ alu alu(
     .D2(aluin),
     .aluout(aluout)
 );
+
+logic exbusy;
+exalu exalu(
+    .clock(CLK),
+    .alucontrol(INST[14:12]),
+    .D1(XD1),
+    .D2(XD2),
+    .aluout(XD3),
+    .busy(exbusy)
+);
+
 
 logic [31:0]MREAD;
 logic [31:0]memout;

@@ -3,13 +3,16 @@ module aes(
     input var logic clock,
     input var logic [127:0] plaintext,
     input var logic [127:0] secret,
-    output var logic [127:0] cipher );
+    input var logic we,
+    output var logic [127:0] cipher,
+    output var logic busy
+);
 
-logic [3:0]counter = 4'b0;
+logic [3:0]counter, nextCounter;
 //function [255:0] sbox(input [255:0] sboxinput);
 //endfunction
 logic [127:0]secretReg;
-logic [127:0]dataReg;
+logic [127:0]dataReg, nextDataReg;
 
 logic [127:0]subBytesIn;
 logic [127:0]subBytesOut;
@@ -46,14 +49,37 @@ keyExpand keyExpand(
     .counter(counter),
     .nextRoundKey(nextRoundKey)
 );
+typedef enum{
+    stateIdle,
+    stateCalc
+} stateType;
+stateType state, nextState;
+
+always_comb begin
+    busy = 0;
+    nextCounter = 0;
+    nextState = state;
+    nextDataReg = dataReg;
+    if(state == stateIdle && we) begin
+        nextState = stateCalc;
+        busy = 1;
+        nextCounter = 0;
+    end else begin
+        busy = 1;
+        if(counter == 9) begin
+            nextCounter = 0;
+            nextState = stateIdle;
+        end else begin
+            nextCounter = counter +1;
+            nextDataReg = counter==4'b0 ? plaintext^secret : roundOut;
+        end
+    end
+end
 
 always_ff @(posedge clock) begin
-    dataReg <= counter==4'b0 ? plaintext^secret : roundOut;
-    cipher <= counter==4'hb ? dataReg : 128'h0;
-end
-always_ff @(negedge clock) begin
-    counter <= counter+1;
+    counter <= nextCounter;
     roundKey <= nextRoundKey;
+    dataReg <= nextDataReg;
 end
 
 function automatic [3:0][3:0][7:0] bytes2matrix(

@@ -27,25 +27,21 @@ logic [127:0]aes_plaintext;
 logic [127:0]aes_secret;
 logic [127:0]aes_cipher;
 logic [127:0]aes_invplaintext;
-aes aes(
-    .clock(CLK_AES),
-    .plaintext({128'h0102030405060708090a0b0c0d0e0f10}),
-    .secret({128'h02030405060708090a0b0c0d0e0f1011}),
-    .cipher(aes_cipher) );
-invAes invAes(
-    .clock(CLK_IAES),
-    .cipher({128'he4692b0ce80373980afc9fe579f5ee9c}),
-    .secret({128'h02030405060708090a0b0c0d0e0f1011}),
-    .plaintext(aes_invplaintext) );
 
 uartTx uartTx(
     .clock(CLK),
     .reset(RST),
-    .buffer(8'h41),
+    .buffer(generalRegisters[31][7:0]),
     //.buffer(generalRegisters[31][7:0])
-    .we(1'b1),
+    .we(generalRegisters[31][8]),
     //.we(generalRegisters[31][8])
     .uartTxPin(uartTxPin)
+);
+logic [255:0]x1;
+logic [255:0]x2;
+pointDoubling pointDoubling(
+    .x1(x1),
+    .x2(x2)
 );
 
 always_ff @(posedge CLK_DC) begin
@@ -62,7 +58,6 @@ always_ff @(posedge CLK_WB or negedge RST) begin
             generalRegisters[0] <= 32'h0;
         end else begin
             generalRegisters[A3] <= WB;
-            generalRegisters[31] = aes_cipher[31:0];
         end
     end
 end
