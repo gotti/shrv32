@@ -1,21 +1,20 @@
 module exalu(
+    input var logic we,
+    input var logic exaluImm,
     input var logic clock,
     input var logic [2:0]alucontrol,
     input var logic [255:0]D1,
     input var logic [255:0]D2,
-    output var logic [255:0]aluout,
+    output var logic [255:0]exaluOut,
     output var logic busy
 );
 logic aesBusy;
 logic invAesBusy;
-logic [127:0]aesPlaintextIn;
-logic [127:0]aesSecretIn;
 logic [127:0]aesCipherOut;
-logic [127:0]invAesCipherIn;
-logic [127:0]invAesSecretIn;
 logic [127:0]invAesPlaintextOut;
-logic [127:0]aesWE;
-logic [127:0]invAesWE;
+logic aesWE;
+logic invAesWE;
+logic b;
 typedef enum{
     stateCalc,
     stateWait,
@@ -25,72 +24,91 @@ stateType aesState, nextAesState;
 stateType invAesState, nextInvAesState;
 
 aes aes(
-    .clock(CLK),
-    .plaintext(aesPlaintextIn),
-    .secret(aesSecretIn),
+    .clock(clock),
+    .plaintext(D1[127:0]),
+    .secret(D2[127:0]),
     .we(aesWE),
     .cipher(aesCipherOut),
     .busy(aesBusy)
 );
 
 invAes invAes(
-    .clock(CLK),
-    .cipher(invAesCipherIn),
-    .secret(invAesSecretIn),
+    .clock(clock),
+    .cipher(D1[127:0]),
+    .secret(D2[127:0]),
     .we(invAesWE),
     .plaintext(invAesPlaintextOut),
     .busy(invAesBusy)
 );
 
+
 always_comb begin
     aesWE = 0;
-    aesBusy = 0;
-    invAesBusy = 0;
-    aesPlaintextIn = 0;
-    aesSecretIn = 0;
-    aesCipherOut = 0;
-    invAesCipherIn = 0;
-    invAesSecretIn = 0;
-    invAesPlaintextOut = 0;
-    aesWE = 0;
     invAesWE = 0;
-    aluout = 0;
-    busy = 0;
-    case (alucontrol[2:0])
-        3'h1: begin
-            if(aesState == stateCalc) begin
-                nextAesState = stateWait;
-                aesPlaintextIn = D1[127:0];
-                aesSecretIn = D2[127:0];
-                aesWE = 1;
-            end else if(aesState == stateWait) begin
-                if(aesBusy) begin
-                    busy = 1;
+    nextAesState = aesState;
+    nextInvAesState = invAesState;
+    if(we==1'b1) begin
+        case (alucontrol[2:0])
+            3'h1: begin
+                if(aesState == stateCalc) begin
+                    nextAesState = stateWait;
+                    aesWE = 1;
+                end else if(aesState == stateWait) begin
+                    if(aesBusy) begin
+                    end else begin
+                        nextAesState = stateFin;
+                    end
                 end else begin
-                    busy = 0;
                     nextAesState = stateCalc;
-                    aluout = aesCipherOut;
                 end
             end
+            3'h2: begin
+                if(invAesState == stateCalc) begin
+                    nextInvAesState = stateWait;
+                    invAesWE = 1;
+                end else if(invAesState == stateWait) begin
+                    if(invAesBusy) begin
+                    end else begin
+                        nextInvAesState = stateFin;
+                    end
+                end else if(invAesState == stateFin) begin
+                    nextInvAesState = stateCalc;
+                end
+            end
+            default: begin
+            end
+        endcase
+    end
+end
+
+//assign exaluout = {128'h0, alucontrol==3'h1 ? aesCipherOut :
+//                alucontrol==3'h2 ? invAesPlaintextOut : 128'h0};
+
+logic [255:0]shiftedD1;
+assign shiftedD1 = D1>>D2;
+always_comb begin
+    exaluOut = 0;
+    case(alucontrol)
+        3'h0: begin
+        end
+        3'h1: begin
+            exaluOut = {128'b0,aesCipherOut};
         end
         3'h2: begin
-            if(invAesState == stateCalc) begin
-                nextInvAesState = stateWait;
-                invAesPlaintextOut = D1[127:0];
-                invAesSecretIn = D2[127:0];
-                invAesWE = 1;
-            end else if(invAesState == stateWait) begin
-                if(invAesBusy) begin
-                    busy = 1;
-                end else begin
-                    busy = 0;
-                    nextInvAesState = stateCalc;
-                    aluout = aesCipherOut;
-                end
-            end
+            exaluOut = {128'b0,invAesPlaintextOut};
+        end
+        3'h3: begin
+            exaluOut = shiftedD1&256'hffffffff;
+        end
+        3'h4: begin
         end
         default: begin
         end
     endcase
+end
+assign busy = aesBusy|invAesBusy;
+always_ff @(posedge clock) begin
+    aesState <= nextAesState;
+    invAesState <= nextInvAesState;
 end
 endmodule

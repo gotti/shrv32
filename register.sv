@@ -3,8 +3,6 @@ module register(
     input var logic CLK,
     input var logic CLK_DC,
     input var logic CLK_WB,
-    input var logic CLK_AES,
-    input var logic CLK_IAES,
     input var logic [4:0]A1,
     input var logic [4:0]A2,
     input var logic [4:0]A3,
@@ -13,15 +11,17 @@ module register(
     output var logic [31:0]RD1,
     output var logic [31:0]RD2,
     output var logic [7:0]LED,
-    output var logic uartTxPin
+    output var logic uartTxPin,
+    output var logic [255:0]RXD
 );
 
 logic [31:0] generalRegisters [31:0];
-assign LED[7:0] = generalRegisters[2][7:0];
+assign LED[7:0] = generalRegisters[31][7:0];
 logic [31:0]d1;
 logic [31:0]d2;
 assign RD1 = d1;
 assign RD2 = d2;
+assign RXD = {generalRegisters[24],generalRegisters[25],generalRegisters[26],generalRegisters[27],generalRegisters[28],generalRegisters[29],generalRegisters[30],generalRegisters[31]};
 
 logic [127:0]aes_plaintext;
 logic [127:0]aes_secret;
@@ -36,12 +36,6 @@ uartTx uartTx(
     .we(generalRegisters[31][8]),
     //.we(generalRegisters[31][8])
     .uartTxPin(uartTxPin)
-);
-logic [255:0]x1;
-logic [255:0]x2;
-pointDoubling pointDoubling(
-    .x1(x1),
-    .x2(x2)
 );
 
 always_ff @(posedge CLK_DC) begin

@@ -3,8 +3,6 @@ module reg256(
     input var logic CLK,
     input var logic CLK_DC,
     input var logic CLK_WB,
-    input var logic CLK_AES,
-    input var logic CLK_IAES,
     input var logic [4:0]A1,
     input var logic [4:0]A2,
     input var logic [4:0]A3,
@@ -22,7 +20,7 @@ end
 
 always_ff @(posedge CLK_WB or negedge RST) begin
     if (!RST) begin
-        generalRegisters <= '{255'h0, 255'h0, 255'h0, 255'h0};
+        generalRegisters <= '{256'h0, 256'h0, 256'h0, 256'h0};
         //R31 <= 0;
     end else if (WE==1'b1) begin
         generalRegisters[A3[1:0]] <= WB;

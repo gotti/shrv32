@@ -19,11 +19,13 @@ clk_gen clk_gen(
     .CLK(CLK),
     .memWait(memWait),
     .rwmem(rwmem),
+    .exBusy(exBusy),
     .CLK_FT(CLK_FT),
     .CLK_DC(CLK_DC),
     .CLK_EX(CLK_EX),
     .CLK_MA(CLK_MA),
-    .CLK_WB(CLK_WB) );
+    .CLK_WB(CLK_WB)
+    );
 
 pc pc(
     .RST(RST),
@@ -43,19 +45,25 @@ logic isjal;
 assign jal = INST[31]==1'b1 ? RPC+ {~11'b0,INST[31],INST[19:12],INST[20],INST[30:21],1'b0} : RPC+{11'b0,INST[31],INST[19:12],INST[20],INST[30:21],1'b0};
 assign WPC = pcsr==1'b1 ? incPC : isbr==1'b1 ? isjal==1'b1 ? jal : brcontout : aluormemor1 ;
 logic [31:0]INST = 32'b0;
-
+/*
+mockrom rom(
+    .clock(CLK_FT),
+    .address(RPC>>2),
+    .q(INST)
+);*/
 rom rom(
     .CLK(CLK_FT),
     .A(RPC),
     .RD(INST)
 );
-
+logic isEnableXD2R;
 logic [31:0]regWB;
 logic [31:0]D1;
 logic [31:0]D2;
 logic regWE = 1'b0;
 logic iswb = 1'b0;
-assign  regWB = (pcsr==1'b1) ? ((iswb==1'b1) ? brcontout : aluormemor1) : incPC ;
+assign  regWB = isEnableXD2R==1'b1 ? XD3[31:0] : (pcsr==1'b1) ? ((iswb==1'b1) ? brcontout : aluormemor1) : incPC ;
+logic [255:0]R2XD;
 register register(
     .RST(RST),
     .CLK(CLK),
@@ -69,12 +77,14 @@ register register(
     .RD1(D1),
     .RD2(D2),
     .LED(LED),
-    .uartTxPin(uartTxPin)
+    .uartTxPin(uartTxPin),
+    .RXD(R2XD)
 );
 
-logic reg256WE, reg256WB;
-logic [255:0] XD1, XD2, XD3;
-assign reg256WB = XD3;
+logic isEnableR2XD;
+logic reg256WE;
+logic [255:0] XD1, XD2, XD3, reg256WB;
+assign reg256WB = isEnableR2XD==1'b1 ? R2XD : XD3;
 reg256 reg256(
     .RST(RST),
     .CLK(CLK),
@@ -97,6 +107,9 @@ logic outmem = 1'b0;
 logic isoutr1 = 1'b0;
 logic memWE = 1'b0;
 logic [3:0]byteena;
+logic exaluEnable;
+logic [2:0] extensionModuleSelect;
+logic exaluImm;
 controller controller(
     .opcode(INST[6:2]),
     .funct3(INST[14:12]),
@@ -116,7 +129,12 @@ controller controller(
     .memWE(memWE),
     .byteena(byteena),
     .alucontrol(alucontrol),
-    .extensionModuleSelect(extensionModuleSelect)
+    .exaluEnable(exaluEnable),
+    .exaluImm(exaluImm),
+    .extensionModuleSelect(extensionModuleSelect),
+    .isEnableR2XD(isEnableR2XD),
+    .isEnableXD2R(isEnableXD2R),
+    .reg256WE(reg256WE)
 );
 logic [31:0]aluout;
 logic [31:0]aluin;
@@ -135,14 +153,20 @@ alu alu(
     .aluout(aluout)
 );
 
-logic exbusy;
+logic exBusy;
+logic exaluWE;
+assign exaluWE = CLK_EX&exaluEnable;
+logic [255:0]exImmIn;
+assign exImmIn = exaluImm==1'b0 ? XD2 : INST[31]==1'b1 ? {~244'b0, INST[31:20]} : {244'b0, INST[31:20]};
 exalu exalu(
+    .we(exaluWE),
+    .exaluImm(exaluImm),
     .clock(CLK),
     .alucontrol(INST[14:12]),
     .D1(XD1),
-    .D2(XD2),
-    .aluout(XD3),
-    .busy(exbusy)
+    .D2(exImmIn),
+    .exaluOut(XD3),
+    .busy(exBusy)
 );
 
 

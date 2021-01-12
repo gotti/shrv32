@@ -8,11 +8,11 @@ module invAes(
     output var logic busy
     );
 
-logic [3:0]counter = 4'b0;
+logic [3:0]counter, nextCounter;
 //function [255:0] sbox(input [255:0] sboxinput);
 //endfunction
 logic [127:0]secretReg;
-logic [127:0]dataReg;
+logic [127:0]dataReg, nextDataReg;
 
 logic [127:0]subBytesIn;
 logic [127:0]subBytesOut;
@@ -41,87 +41,67 @@ assign roundOut = subBytesOut; //TODO
 //TODO
 //
 logic [127:0] roundKey [10:0];
+logic [127:0] currentRoundKey,nextRoundKey;
+
+logic [127:0]keyExpand0In;
+logic [127:0]keyExpand0Out;
 keyExpand keyExpand0(
-    .roundKey(secret),
-    .counter(0),
-    .nextRoundKey(roundKey[0])
+    .roundKey(keyExpand0In),
+    .counter(counter-1),
+    .nextRoundKey(keyExpand0Out)
 );
-keyExpand keyExpand1(
-    .roundKey(roundKey[0]),
-    .counter(1),
-    .nextRoundKey(roundKey[1])
-);
-keyExpand keyExpand2(
-    .roundKey(roundKey[1]),
-    .counter(2),
-    .nextRoundKey(roundKey[2])
-);
-keyExpand keyExpand3(
-    .roundKey(roundKey[2]),
-    .counter(3),
-    .nextRoundKey(roundKey[3])
-);
-keyExpand keyExpand4(
-    .roundKey(roundKey[3]),
-    .counter(4),
-    .nextRoundKey(roundKey[4])
-);
-keyExpand keyExpand5(
-    .roundKey(roundKey[4]),
-    .counter(5),
-    .nextRoundKey(roundKey[5])
-);
-keyExpand keyExpand6(
-    .roundKey(roundKey[5]),
-    .counter(6),
-    .nextRoundKey(roundKey[6])
-);
-keyExpand keyExpand7(
-    .roundKey(roundKey[6]),
-    .counter(7),
-    .nextRoundKey(roundKey[7])
-);
-keyExpand keyExpand8(
-    .roundKey(roundKey[7]),
-    .counter(8),
-    .nextRoundKey(roundKey[8])
-);
-keyExpand keyExpand9(
-    .roundKey(roundKey[8]),
-    .counter(9),
-    .nextRoundKey(roundKey[9])
-);
-keyExpand keyExpand10(
-    .roundKey(roundKey[9]),
-    .counter(10),
-    .nextRoundKey(roundKey[10])
-);
+
+typedef enum{
+    stateIdle,
+    statePreCalc,
+    stateCalc
+} stateType;
+stateType state, nextState;
 assign plaintext = dataReg;
 always_comb begin
     busy = 0;
     nextCounter = 0;
     nextState = state;
     nextDataReg = dataReg;
+    nextRoundKey = roundKey[counter];
+    keyExpand0In = 0;
     if(state == stateIdle && we) begin
-        nextState = stateCalc;
+        nextState = statePreCalc;
         busy = 1;
         nextCounter = 0;
-    end else begin
+    end else if(state==statePreCalc) begin
         busy = 1;
-        if(counter == 9) begin
+        if(counter == 11) begin
+            nextState = stateCalc;
+            nextCounter = 0;
+        end else begin
+            keyExpand0In = currentRoundKey;
+            nextRoundKey = keyExpand0Out;
+            nextCounter = counter +1;
+        end
+    end else if (state == stateCalc) begin
+        busy = 1;
+        if(counter == 11) begin
             nextCounter = 0;
             nextState = stateIdle;
         end else begin
             nextCounter = counter +1;
             nextDataReg = counter==4'b0 ? plaintext^secret : roundOut;
         end
+    end else begin
+        busy = 0;
     end
 end
 
 always_ff @(posedge clock) begin
+    state <= nextState;
     counter <= nextCounter;
-    roundKey <= nextRoundKey;
-    dataReg <= nextCounter==4'hb ? nextDataReg^secret : nextDataReg;
+    dataReg <= nextCounter==4'h2 ? cipher : nextCounter==4'hb ? nextDataReg^secret : nextDataReg;
+    //roundKey[nextCounter - 1] <= keyExpand0Out;
+    currentRoundKey <= counter==4'b0 ? secret : nextRoundKey;
+    if(state == statePreCalc) begin
+        roundKey[nextCounter-2] <= nextRoundKey;
+    end
 end
 /*
 always_ff @(posedge clock) begin

@@ -54,7 +54,7 @@ typedef enum{
     stateCalc
 } stateType;
 stateType state, nextState;
-
+assign cipher = dataReg;
 always_comb begin
     busy = 0;
     nextCounter = 0;
@@ -64,19 +64,21 @@ always_comb begin
         nextState = stateCalc;
         busy = 1;
         nextCounter = 0;
-    end else begin
+    end else if (state == stateCalc) begin
         busy = 1;
-        if(counter == 9) begin
-            nextCounter = 0;
+        if(counter >= 10) begin
+            nextCounter = 10;
             nextState = stateIdle;
         end else begin
             nextCounter = counter +1;
             nextDataReg = counter==4'b0 ? plaintext^secret : roundOut;
         end
+    end else begin
     end
 end
 
 always_ff @(posedge clock) begin
+    state <= nextState;
     counter <= nextCounter;
     roundKey <= nextRoundKey;
     dataReg <= nextDataReg;
