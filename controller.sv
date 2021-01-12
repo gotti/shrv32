@@ -17,9 +17,20 @@ module controller(
     output var logic memWE,
     output var logic [3:0]byteena,
     output var logic [9:0]alucontrol,
-    output var logic [2:0]extensionModuleSelect );
+    output var logic exaluEnable,
+    output var logic exaluImm,
+    output var logic [2:0]extensionModuleSelect,
+    output var logic isEnableR2XD,
+    output var logic isEnableXD2R,
+    output var logic reg256WE
+);
 
 always_comb begin
+        exaluEnable = 1'b0;
+        exaluImm = 1'b0;
+        isEnableR2XD = 1'b0;
+        isEnableXD2R = 1'b0;
+        reg256WE = 1'b0;
     case (opcode)
         //R-Type https://inst.eecs.berkeley.edu/~cs61c/resources/su18_lec/Lecture7.pdf
         5'b01100: begin
@@ -140,10 +151,10 @@ always_comb begin
         end
         //extension
         5'b00010: begin
-            regWE = 1'b0;
+            regWE = funct3==3'd3;
             outmem = 1'b0;
             aluneg = 1'b0;
-            isImm = 1'b1;
+            isImm = 1'b0;
             immtype = 2'b0;
             pcsr = 1'b1;
             isoutr1 = 1'b1;
@@ -155,7 +166,12 @@ always_comb begin
             memWE = 1'b0;
             byteena = 4'b0000;
             alucontrol = 10'b0;
-            extensionModuleSelect = funct3+3'b1;
+            exaluEnable = 1'b1;
+            exaluImm = funct3==3'd3;
+            extensionModuleSelect = funct3;
+            isEnableXD2R = funct3==3'd3;
+            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2;
+            isEnableR2XD = funct3==3'd4;
             //extensionModuleSelect
             // 0 -> disable
             // 1 -> aes-128 encrypt

@@ -1,9 +1,8 @@
 module register(
     input var logic RST,
+    input var logic CLK,
     input var logic CLK_DC,
     input var logic CLK_WB,
-    input var logic CLK_AES,
-    input var logic CLK_IAES,
     input var logic [4:0]A1,
     input var logic [4:0]A2,
     input var logic [4:0]A3,
@@ -11,29 +10,33 @@ module register(
     input var logic WE,
     output var logic [31:0]RD1,
     output var logic [31:0]RD2,
-    output var logic [7:0]LED );
+    output var logic [7:0]LED,
+    output var logic uartTxPin,
+    output var logic [255:0]RXD
+);
 
 logic [31:0] generalRegisters [31:0];
-assign LED[7:0] = generalRegisters[2][7:0];
+assign LED[7:0] = generalRegisters[31][7:0];
 logic [31:0]d1;
 logic [31:0]d2;
 assign RD1 = d1;
 assign RD2 = d2;
+assign RXD = {generalRegisters[24],generalRegisters[25],generalRegisters[26],generalRegisters[27],generalRegisters[28],generalRegisters[29],generalRegisters[30],generalRegisters[31]};
 
 logic [127:0]aes_plaintext;
 logic [127:0]aes_secret;
 logic [127:0]aes_cipher;
 logic [127:0]aes_invplaintext;
-aes aes(
-    .clock(CLK_AES),
-    .plaintext({128'h0102030405060708090a0b0c0d0e0f10}),
-    .secret({128'h02030405060708090a0b0c0d0e0f1011}),
-    .cipher(aes_cipher) );
-invAes invAes(
-    .clock(CLK_IAES),
-    .cipher({128'he4692b0ce80373980afc9fe579f5ee9c}),
-    .secret({128'h02030405060708090a0b0c0d0e0f1011}),
-    .plaintext(aes_invplaintext) );
+
+uartTx uartTx(
+    .clock(CLK),
+    .reset(RST),
+    .buffer(generalRegisters[31][7:0]),
+    //.buffer(generalRegisters[31][7:0])
+    .we(generalRegisters[31][8]),
+    //.we(generalRegisters[31][8])
+    .uartTxPin(uartTxPin)
+);
 
 always_ff @(posedge CLK_DC) begin
     d1 <= generalRegisters[A1];
@@ -49,7 +52,6 @@ always_ff @(posedge CLK_WB or negedge RST) begin
             generalRegisters[0] <= 32'h0;
         end else begin
             generalRegisters[A3] <= WB;
-            generalRegisters[31] = aes_cipher[31:0];
         end
     end
 end
