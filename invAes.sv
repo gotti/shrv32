@@ -86,7 +86,7 @@ always_comb begin
             nextState = stateIdle;
         end else begin
             nextCounter = counter +1;
-            nextDataReg = counter==4'b0 ? plaintext^secret : roundOut;
+            nextDataReg = roundOut;
         end
     end else begin
         busy = 0;
@@ -96,11 +96,12 @@ end
 always_ff @(posedge clock) begin
     state <= nextState;
     counter <= nextCounter;
-    dataReg <= nextCounter==4'h2 ? cipher : nextCounter==4'hb ? nextDataReg^secret : nextDataReg;
-    //roundKey[nextCounter - 1] <= keyExpand0Out;
-    currentRoundKey <= counter==4'b0 ? secret : nextRoundKey;
     if(state == statePreCalc) begin
         roundKey[nextCounter-2] <= nextRoundKey;
+        currentRoundKey <= counter==4'b0 ? secret : nextRoundKey;
+        roundKey[10] <= secret;
+    end else if(state == stateCalc) begin
+        dataReg <= counter==4'd0 ? cipher : nextDataReg;
     end
 end
 /*

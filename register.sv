@@ -31,9 +31,9 @@ logic [127:0]aes_invplaintext;
 uartTx uartTx(
     .clock(CLK),
     .reset(RST),
-    .buffer(generalRegisters[31][7:0]),
+    .buffer(generalRegisters[22][7:0]),
     //.buffer(generalRegisters[31][7:0])
-    .we(generalRegisters[31][8]),
+    .we(generalRegisters[21][0]),
     //.we(generalRegisters[31][8])
     .uartTxPin(uartTxPin)
 );

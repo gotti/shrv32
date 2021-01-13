@@ -66,8 +66,8 @@ always_comb begin
         nextCounter = 0;
     end else if (state == stateCalc) begin
         busy = 1;
-        if(counter >= 10) begin
-            nextCounter = 10;
+        if(counter > 10) begin
+            nextCounter = 0;
             nextState = stateIdle;
         end else begin
             nextCounter = counter +1;
