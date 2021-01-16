@@ -15,7 +15,7 @@ always_ff @(posedge CLK) begin
         32'h5: RD<=32'h4020218b;
         32'h6: RD<=32'h00003f8b;
         32'h7: RD<=32'h04400b13;
-        32'h8: RD<=32'h21600023;
+        32'h8: RD<=32'h216000a3;
 //        32'h9: RD<=32'hff5ff06f;
 //        32'h9: RD<=32'h00000a93;
         default: RD<=32'h0;

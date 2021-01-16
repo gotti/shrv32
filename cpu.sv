@@ -172,6 +172,7 @@ exalu exalu(
 logic [31:0]MREAD;
 logic [31:0]memout;
 mmu mmu(
+    .rawClock(CLK),
     .clock(CLK_MA),
     .RST(RST),
     .vaddr(aluout),
@@ -180,7 +181,8 @@ mmu mmu(
     .memWE(memWE),
     .memWait(memWait),
     .q(memout),
-    .uartTxPin(uartTxPin)
+    .uartTxPin(uartTxPin),
+    .uartRxPin(uartTxPin)
 );
 
 logic mem2reg;

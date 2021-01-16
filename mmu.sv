@@ -1,4 +1,5 @@
 module mmu(
+    input var logic rawClock,
     input var logic clock,
     input var logic RST,
     input var logic [31:0]vaddr,
@@ -7,6 +8,7 @@ module mmu(
     input var logic memWE,
     output var logic memWait,
     output var logic [31:0]q,
+    input var logic uartRxPin,
     output var logic uartTxPin
 );
 logic [31:0]SPTBR=32'h10;
@@ -28,7 +30,7 @@ mockram ram(
 logic [7:0] uartTxIn;
 logic uartWE, uartTxBusy;
 uartTx uartTx(
-    .clock(clock),
+    .clock(rawClock),
     .reset(RST),
     .buffer(uartTxIn),
     //.buffer(generalRegisters[31][7:0])
@@ -36,6 +38,16 @@ uartTx uartTx(
     //.we(generalRegisters[31][8])
     .uartTxPin(uartTxPin),
     .busy(uartTxBusy)
+);
+
+logic [7:0] uartRxOut;
+logic uartRxFin;
+uartRx uartRx(
+    .clock(rawClock),
+    .reset(RST),
+    .buffer(uartRxOut),
+    .uartRxPin(uartRxPin),
+    .fin(uartRxFin)
 );
 /*
 always_comb begin
@@ -59,6 +71,14 @@ always_comb begin
     end
 end
 */
+logic uartRxReady, uartRxRead;
+always_ff @(posedge uartRxRead or posedge uartRxFin) begin
+    if (uartRxRead==1'b1) begin
+        uartRxReady <= 1'b0;
+    end else if (uartRxFin==1'b1) begin
+        uartRxReady <= 1'b1;
+    end
+end
 always_ff @(posedge clock) begin
     memaddr <= vaddr;
     ramWE <= 0;
@@ -66,6 +86,7 @@ always_ff @(posedge clock) begin
     uartWE <= 0;
     uartTxIn <= 8'hff;
     q <= 32'b0;
+    uartRxRead <= 1'b0;
     //0x200 status register
     //0x201 Rx buffer
     //0x202 Tx buffer
@@ -74,10 +95,13 @@ always_ff @(posedge clock) begin
     // |--not used--|Txbusy|RxReady|
     if (32'h200<=vaddr && vaddr<=32'h202) begin
         if (32'h200==vaddr) begin
-            q <= {30'b0,uartTxBusy,1'b0};
+            q <= {30'b0,uartTxBusy,uartRxReady};
         end else if (32'h201==vaddr) begin
             uartTxIn <= data[7:0];
             uartWE <= 1'b1;
+        end else if (32'h202==vaddr) begin
+            uartRxRead <= 1'b1;
+            q <= {24'h0,uartRxOut};
         end
     end else begin //TODO: たぶんクロックの関係でバグる
         q <= memout;
