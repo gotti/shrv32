@@ -1,17 +1,92 @@
 module mmu(
     input var logic clock,
+    input var logic RST,
     input var logic [31:0]vaddr,
     input var logic [31:0]data,
     input var logic [3:0]byteena,
     input var logic memWE,
     output var logic memWait,
-    output var logic [31:0]q );
+    output var logic [31:0]q,
+    output var logic uartTxPin
+);
 logic [31:0]SPTBR=32'h10;
 logic [2:0]counter=3'b0;
 logic [31:0]memaddr;
 logic [31:0]memout;
 logic [11:0]ppn1;
+logic ramWE;
+logic [3:0]ramByteEnable;
+mockram ram(
+    .clock(clock),
+    .address(memaddr),
+    .byteena(ramByteEnable),
+    .data(data),
+    .wren(ramWE),
+    .q(memout)
+);
+
+logic [7:0] uartTxIn;
+logic uartWE, uartTxBusy;
+uartTx uartTx(
+    .clock(clock),
+    .reset(RST),
+    .buffer(uartTxIn),
+    //.buffer(generalRegisters[31][7:0])
+    .we(uartWE),
+    //.we(generalRegisters[31][8])
+    .uartTxPin(uartTxPin),
+    .busy(uartTxBusy)
+);
+/*
+always_comb begin
+    memaddr = vaddr;
+    ramWE = 0;
+    ramByteEnable = 0;
+    uartWE = 0;
+    uartTxIn = 8'hff;
+    //0x200 status register
+    //0x201 Rx buffer
+    //0x202 Tx buffer
+    // 0x200 status register mapping
+    // |7          2|1     |0      |
+    // |--not used--|Txbusy|RxReady|
+    if (32'h200<=vaddr && vaddr<=32'h202) begin
+        uartWE = 1;
+        uartTxIn = data[7:0];
+    end else begin
+        ramWE = memWE;
+        ramByteEnable = byteena;
+    end
+end
+*/
 always_ff @(posedge clock) begin
+    memaddr <= vaddr;
+    ramWE <= 0;
+    ramByteEnable <= 0;
+    uartWE <= 0;
+    uartTxIn <= 8'hff;
+    q <= 32'b0;
+    //0x200 status register
+    //0x201 Rx buffer
+    //0x202 Tx buffer
+    // 0x200 status register mapping
+    // |7          2|1     |0      |
+    // |--not used--|Txbusy|RxReady|
+    if (32'h200<=vaddr && vaddr<=32'h202) begin
+        if (32'h200==vaddr) begin
+            q <= {30'b0,uartTxBusy,1'b0};
+        end else if (32'h201==vaddr) begin
+            uartTxIn <= data[7:0];
+            uartWE <= 1'b1;
+        end
+    end else begin //TODO: たぶんクロックの関係でバグる
+        q <= memout;
+        ramWE <= memWE;
+        ramByteEnable <= byteena;
+    end
+end
+//address convertion
+/*always_ff @(posedge clock) begin
     if (memWE==1'b1) begin
         case (counter)
             //calculate vpn1
@@ -64,4 +139,5 @@ mockram ram(
     .wren(memWE),
     .q(memout)
 );
+*/
 endmodule

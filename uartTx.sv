@@ -3,51 +3,84 @@ module uartTx(
     input var logic reset,
     input var logic [7:0]buffer,
     input var logic we,
-    output var logic uartTxPin
+    output var logic uartTxPin,
+    output var logic busy
 );
-
 logic clk;
 logic [10:0]divCounter = 11'b0;
 always_ff @(posedge clock) begin
-    if (divCounter==11'd104) begin
+    if (divCounter==11'd52-1) begin //CYC1000は12MHzなはずなのになんで？これで115200
         divCounter <= 11'd0;
         clk <= ~clk;
     end else begin
         divCounter <= divCounter+1;
     end
 end
-logic clkCounter =1'b0;
+logic [1:0] state, nextState;
 // idle
 // transmit
-logic [3:0] transmissionCounter = 4'b0;
-logic [1:0] timingCounter = 2'b0;
-logic [8:0] register = 9'b0;
+logic [3:0] transmissionCounter, nextTransmissionCounter;
+logic [1:0] timingCounter, nextTimingCounter;
+logic [8:0] txBuffer, register, nextRegister;
+
+logic lwe;
+always_ff @(posedge we or negedge busy) begin
+    if(we==1'b1) begin
+        lwe <= 1;
+        txBuffer = {1'b1, buffer};
+    end else if(busy==1'b0) begin
+        lwe <= 0;
+    end
+end
+
+always_comb begin
+    busy = 1'b0;
+    uartTxPin = 1'b1;
+    nextRegister = register;
+    nextState = state;
+    nextTransmissionCounter = transmissionCounter;
+    case (state)
+        2'd0: begin //idle
+            if(lwe==1'b1) begin
+                busy = 1'b1;
+                nextRegister = txBuffer;
+                nextState = 2'd1; //startbit
+            end
+        end
+        2'd1: begin
+                busy = 1'b1;
+                uartTxPin = 1'b0;
+                nextState = 2'd2; //transmit
+        end
+        2'd2: begin //
+            busy = 1'b1;
+            if (transmissionCounter == 4'd8) begin
+                nextState = 2'd3; //fin
+                nextTransmissionCounter = 4'd0;
+            end else begin
+                uartTxPin = register[0];
+                nextRegister = {1'b1,register[8:1]};
+                nextTransmissionCounter = transmissionCounter+1;
+            end
+        end
+        2'd3: begin
+            busy = 1'b0;
+            nextState = 2'd0;
+            nextTransmissionCounter = 0;
+        end
+        default: begin
+        end
+    endcase
+end
 
 always_ff @(posedge clk or negedge reset) begin
     if(!reset) begin
-        clkCounter <= 1'b0;
+        state <= 2'b0;
         transmissionCounter <= 4'b0;
     end else begin
-        case (clkCounter)
-            1'b0: begin //idle
-                if(we==1'b1) begin
-                    uartTxPin <= 1'b0;
-                    register <= {1'b1, buffer};
-                    clkCounter <= 1'b1; //transmit
-                end else begin
-                    uartTxPin <= 1'b1;
-                end
-            end
-            1'b1: begin //
-                if (transmissionCounter == 4'd9) begin
-                    clkCounter <= 1'b0; //idle
-                    transmissionCounter <= 4'd0;
-                end else begin
-                    uartTxPin <= register[transmissionCounter];
-                    transmissionCounter <= transmissionCounter+1;
-                end
-            end
-        endcase
+        state <= nextState;
+        register <= nextRegister;
+        transmissionCounter <= nextTransmissionCounter;
     end
 end
 endmodule

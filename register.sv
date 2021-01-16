@@ -11,7 +11,6 @@ module register(
     output var logic [31:0]RD1,
     output var logic [31:0]RD2,
     output var logic [7:0]LED,
-    output var logic uartTxPin,
     output var logic [255:0]RXD
 );
 
@@ -27,16 +26,6 @@ logic [127:0]aes_plaintext;
 logic [127:0]aes_secret;
 logic [127:0]aes_cipher;
 logic [127:0]aes_invplaintext;
-
-uartTx uartTx(
-    .clock(CLK),
-    .reset(RST),
-    .buffer(generalRegisters[22][7:0]),
-    //.buffer(generalRegisters[31][7:0])
-    .we(generalRegisters[21][0]),
-    //.we(generalRegisters[31][8])
-    .uartTxPin(uartTxPin)
-);
 
 always_ff @(posedge CLK_DC) begin
     d1 <= generalRegisters[A1];

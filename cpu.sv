@@ -77,7 +77,6 @@ register register(
     .RD1(D1),
     .RD2(D2),
     .LED(LED),
-    .uartTxPin(uartTxPin),
     .RXD(R2XD)
 );
 
@@ -174,12 +173,14 @@ logic [31:0]MREAD;
 logic [31:0]memout;
 mmu mmu(
     .clock(CLK_MA),
+    .RST(RST),
     .vaddr(aluout),
     .data(D2),
     .byteena(byteena),
     .memWE(memWE),
     .memWait(memWait),
-    .q(memout)
+    .q(memout),
+    .uartTxPin(uartTxPin)
 );
 
 logic mem2reg;
