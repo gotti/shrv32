@@ -9,13 +9,12 @@ logic busy;
 logic clk;
 logic receptionEnable;
 logic [10:0]divCounter = 11'b0;
-always_ff @(negedge uartRxPin or negedge busy) begin
+always_ff @(posedge clock) begin
     if (uartRxPin==1'b0) begin
         if(receptionEnable==1'b0) begin
             receptionEnable <= 1'b1;
         end
-    end
-    if (busy==1'b0) begin
+    end else if (busy==1'b0) begin
         if(receptionEnable==1'b1) begin
             receptionEnable <= 1'b0;
         end
@@ -23,7 +22,7 @@ always_ff @(negedge uartRxPin or negedge busy) begin
 end
 always_ff @(posedge clock) begin
     if (receptionEnable==1'b1) begin
-        if (divCounter==11'd52-1) begin //CYC1000は12MHzなはずなのになんで？これで115200
+        if (divCounter==11'd52-1) begin //これで115200bps
             divCounter <= 11'd0;
             clk <= ~clk;
         end else begin
@@ -31,6 +30,7 @@ always_ff @(posedge clock) begin
         end
     end else begin
         divCounter <= 0;
+        clk <= 0;
     end
 end
 logic [1:0] state, nextState;
@@ -56,7 +56,7 @@ always_comb begin
         2'd2: begin
             busy = 1'b1;
             nextRegister = {uartRxPin,register[9:1]};
-            if (receptionCounter == 4'd8) begin
+            if (receptionCounter == 4'd9) begin
                 nextState = 2'd3; //fin
                 nextReceptionCounter = 4'd0;
             end else begin
@@ -65,7 +65,7 @@ always_comb begin
         end
         2'd3: begin
             fin = 1'b1;
-            busy = 1'b1;
+            busy = 1'b0;
             nextState = 2'd0;
             nextReceptionCounter = 0;
         end

@@ -72,7 +72,7 @@ always_comb begin
 end
 */
 logic uartRxReady, uartRxRead;
-always_ff @(posedge rawClock) begin
+always_ff @(posedge uartRxRead or posedge uartRxFin) begin
     if (uartRxRead==1'b1) begin
         uartRxReady <= 1'b0;
     end else if (uartRxFin==1'b1) begin
