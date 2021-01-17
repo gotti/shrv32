@@ -2,7 +2,8 @@ module cpu(
     input var CLK,
     input var RST,
     output var logic [7:0]LED,
-    output var logic uartTxPin = 1'b1
+    input var logic uartRxPin,
+    output var logic uartTxPin
 );
 
 logic pcWE = 1'b1;
@@ -102,6 +103,7 @@ logic [9:0]alucontrol;
 logic aluneg;
 logic isImm = 1'b0;
 logic [1:0]immtype = 2'b0;
+logic brImmType = 1'b0;
 logic outmem = 1'b0;
 logic isoutr1 = 1'b0;
 logic memWE = 1'b0;
@@ -118,6 +120,7 @@ controller controller(
     .aluneg(aluneg),
     .isImm(isImm),
     .immtype(immtype),
+    .brImmType(brImmType),
     .pcsr(pcsr),
     .isoutr1(isoutr1),
     .isbr(isbr),
@@ -182,7 +185,7 @@ mmu mmu(
     .memWait(memWait),
     .q(memout),
     .uartTxPin(uartTxPin),
-    .uartRxPin(uartTxPin)
+    .uartRxPin(uartRxPin)
 );
 
 logic mem2reg;
@@ -191,7 +194,9 @@ assign aluormem = outmem==1'b1 ? memout : aluout ;
 assign aluormemor1 = isoutr1==1'b1 ? D1 : aluormem;
 brcontroller brcontroller(
     .cond(aluormem),
-    .address(RPC+ ((INST[31]==1'b1) ? {~19'b0,INST[31],INST[7],INST[30:25],INST[11:8],1'b0} : {19'b0,INST[31],INST[7],INST[30:25],INST[11:8],1'b0})),
+    .funct3(INST[14:12]),
+    .pc(RPC),
+    .offset(((INST[31]==1'b1) ? {~19'b0,INST[31],INST[7],INST[30:25],INST[11:8],1'b0} : {19'b0,INST[31],INST[7],INST[30:25],INST[11:8],1'b0})),
     .out(brcontout)
 );
 

@@ -7,6 +7,7 @@ module controller(
     output var logic aluneg,
     output var logic isImm,
     output var logic [1:0]immtype,
+    output var logic brImmType,
     output var logic pcsr,
     output var logic isoutr1,
     output var logic isbr,
@@ -31,6 +32,7 @@ always_comb begin
         isEnableR2XD = 1'b0;
         isEnableXD2R = 1'b0;
         reg256WE = 1'b0;
+        brImmType = 1'b0;
     case (opcode)
         //R-Type https://inst.eecs.berkeley.edu/~cs61c/resources/su18_lec/Lecture7.pdf
         5'b01100: begin
@@ -55,13 +57,33 @@ always_comb begin
             rs2_num<=INST[24:20];
             rd_num<=INST[11:7];*/
         end
-        //I-Type
+        //jalr
         5'b11001: begin
             regWE = 1'b0;
             outmem = 1'b0;
             aluneg = 1'b0;
             isImm = 1'b1;
             immtype = 2'b0;
+            pcsr = 1'b0;
+            isoutr1 = 1'b0;
+            isbr = 1'b0;
+            isjal = 1'b0;
+            iswb = 1'b0;
+            pcWE = 1'b1;
+            rwmem = 1'b0;
+            memWE = 1'b0;
+            byteena = 4'b0000;
+            alucontrol = 10'b0;
+            extensionModuleSelect = 3'b0;
+        end
+        //Branch
+        5'b11000: begin
+            regWE = 1'b0;
+            outmem = 1'b0;
+            aluneg = 1'b1;
+            isImm = 1'b0;
+            immtype = 2'b0;
+            brImmType = 1'b1;
             pcsr = 1'b0;
             isoutr1 = 1'b1;
             isbr = 1'b1;
@@ -94,11 +116,12 @@ always_comb begin
             alucontrol = 10'b0;
             extensionModuleSelect = 3'b0;
         end
+        //load
         5'b00000: begin
             regWE = 1'b1;
             outmem = 1'b1;
             aluneg = 1'b0;
-            isImm = 1'b0;
+            isImm = 1'b1;
             immtype = 2'b0;
             pcsr = 1'b1;
             isoutr1 = 1'b0;
@@ -131,6 +154,7 @@ always_comb begin
             alucontrol = {7'b0, funct3};
             extensionModuleSelect = 3'b0;
         end
+        //jal
         5'b11011: begin
             regWE = 1'b0;
             outmem = 1'b0;

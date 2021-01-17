@@ -10,10 +10,15 @@ logic clk;
 logic receptionEnable;
 logic [10:0]divCounter = 11'b0;
 always_ff @(negedge uartRxPin or negedge busy) begin
-    if (receptionEnable==1'b0 && uartRxPin==1'b0) begin
-        receptionEnable <= 1'b1;
-    end else if (receptionEnable==1'b1 && busy==1'b0) begin
-        receptionEnable <= 1'b0;
+    if (uartRxPin==1'b0) begin
+        if(receptionEnable==1'b0) begin
+            receptionEnable <= 1'b1;
+        end
+    end
+    if (busy==1'b0) begin
+        if(receptionEnable==1'b1) begin
+            receptionEnable <= 1'b0;
+        end
     end
 end
 always_ff @(posedge clock) begin

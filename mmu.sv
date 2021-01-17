@@ -72,19 +72,20 @@ always_comb begin
 end
 */
 logic uartRxReady, uartRxRead;
-always_ff @(posedge uartRxRead or posedge uartRxFin) begin
+always_ff @(posedge rawClock) begin
     if (uartRxRead==1'b1) begin
         uartRxReady <= 1'b0;
     end else if (uartRxFin==1'b1) begin
         uartRxReady <= 1'b1;
     end
 end
+
+assign uartTxIn = data[7:0];
 always_ff @(posedge clock) begin
     memaddr <= vaddr;
     ramWE <= 0;
     ramByteEnable <= 0;
     uartWE <= 0;
-    uartTxIn <= 8'hff;
     q <= 32'b0;
     uartRxRead <= 1'b0;
     //0x200 status register
@@ -97,7 +98,6 @@ always_ff @(posedge clock) begin
         if (32'h200==vaddr) begin
             q <= {30'b0,uartTxBusy,uartRxReady};
         end else if (32'h201==vaddr) begin
-            uartTxIn <= data[7:0];
             uartWE <= 1'b1;
         end else if (32'h202==vaddr) begin
             uartRxRead <= 1'b1;
