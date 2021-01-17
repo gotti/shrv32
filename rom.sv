@@ -4,7 +4,7 @@ module rom(
     output var logic [31:0]RD );
 
 logic [4:0]counter=5'b0;
-logic [31:0]insts[31:0];
+logic [31:0]insts[255:0];
 initial $readmemh("../asm-gtrv32/bin",insts);
 always_ff @(posedge CLK) begin
     RD <= insts[A>>2];

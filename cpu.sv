@@ -118,7 +118,7 @@ logic memWE = 1'b0;
 logic [3:0]byteena;
 logic exaluEnable;
 logic [2:0] extensionModuleSelect;
-logic exaluImm, exaluInsert;
+logic exaluImm, exaluInsert, exaluD2Insert;
 controller controller(
     .opcode(INST[6:2]),
     .funct3(INST[14:12]),
@@ -142,6 +142,7 @@ controller controller(
     .exaluEnable(exaluEnable),
     .exaluImm(exaluImm),
     .exaluInsert(exaluInsert),
+    .exaluD2Insert(exaluD2Insert),
     .extensionModuleSelect(extensionModuleSelect),
     .isEnableR2XD(isEnableR2XD),
     .isEnableXD2R(isEnableXD2R),
@@ -168,7 +169,7 @@ logic exBusy;
 logic exaluWE;
 assign exaluWE = CLK_EX&exaluEnable;
 logic [255:0]exImmIn;
-assign exImmIn = exaluInsert==1'b0 ? XD2 : exaluImm==1'b0 ? {224'b0,aluormem} : INST[31]==1'b1 ? {~244'b0, INST[31:20]} : {244'b0, INST[31:20]};
+assign exImmIn = exaluInsert==1'b0 ? XD2 : exaluImm==1'b0 ? {224'b0, exaluD2Insert==1'b1 ? D2 : aluormem} : INST[31]==1'b1 ? {~244'b0, INST[31:20]} : {244'b0, INST[31:20]};
 exalu exalu(
     .we(exaluWE),
     .clock(CLK),
