@@ -40,7 +40,7 @@ uartTx uartTx(
     .busy(uartTxBusy)
 );
 
-logic [7:0] uartRxOut;
+logic [7:0] uartRxOut, uartRxBuffer;
 logic uartRxFin;
 uartRx uartRx(
     .clock(rawClock),
@@ -94,6 +94,11 @@ always_ff @(posedge clock) begin
     // 0x200 status register mapping
     // |7          2|1     |0      |
     // |--not used--|Txbusy|RxReady|
+    //
+    //TxBusy is high when transmitting data, do not write to buffer
+    //RxReady is high when there is received and unread data
+    //Before transmit data, check TxBusy is low
+    //Before read received data, check RxReady is high
     if (32'h200<=vaddr && vaddr<=32'h202) begin
         if (32'h200==vaddr) begin
             q <= {30'b0,uartTxBusy,uartRxReady};

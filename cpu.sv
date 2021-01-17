@@ -52,11 +52,19 @@ mockrom rom(
     .address(RPC>>2),
     .q(INST)
 );*/
+
 rom rom(
     .CLK(CLK_FT),
     .A(RPC),
     .RD(INST)
 );
+
+/*
+onchiprom rom(
+    .clock(CLK_FT),
+    .address(10'(shiftedPC>>2)),
+    .q(INST)
+);*/
 logic isEnableXD2R;
 logic [31:0]regWB;
 logic [31:0]D1;
@@ -110,7 +118,7 @@ logic memWE = 1'b0;
 logic [3:0]byteena;
 logic exaluEnable;
 logic [2:0] extensionModuleSelect;
-logic exaluImm;
+logic exaluImm, exaluInsert;
 controller controller(
     .opcode(INST[6:2]),
     .funct3(INST[14:12]),
@@ -133,6 +141,7 @@ controller controller(
     .alucontrol(alucontrol),
     .exaluEnable(exaluEnable),
     .exaluImm(exaluImm),
+    .exaluInsert(exaluInsert),
     .extensionModuleSelect(extensionModuleSelect),
     .isEnableR2XD(isEnableR2XD),
     .isEnableXD2R(isEnableXD2R),
@@ -159,10 +168,9 @@ logic exBusy;
 logic exaluWE;
 assign exaluWE = CLK_EX&exaluEnable;
 logic [255:0]exImmIn;
-assign exImmIn = exaluImm==1'b0 ? XD2 : INST[31]==1'b1 ? {~244'b0, INST[31:20]} : {244'b0, INST[31:20]};
+assign exImmIn = exaluInsert==1'b0 ? XD2 : exaluImm==1'b0 ? {224'b0,aluormem} : INST[31]==1'b1 ? {~244'b0, INST[31:20]} : {244'b0, INST[31:20]};
 exalu exalu(
     .we(exaluWE),
-    .exaluImm(exaluImm),
     .clock(CLK),
     .alucontrol(INST[14:12]),
     .D1(XD1),

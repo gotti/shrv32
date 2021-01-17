@@ -20,6 +20,7 @@ module controller(
     output var logic [9:0]alucontrol,
     output var logic exaluEnable,
     output var logic exaluImm,
+    output var logic exaluInsert,
     output var logic [2:0]extensionModuleSelect,
     output var logic isEnableR2XD,
     output var logic isEnableXD2R,
@@ -29,6 +30,7 @@ module controller(
 always_comb begin
         exaluEnable = 1'b0;
         exaluImm = 1'b0;
+        exaluInsert = 1'b0;
         isEnableR2XD = 1'b0;
         isEnableXD2R = 1'b0;
         reg256WE = 1'b0;
@@ -173,10 +175,10 @@ always_comb begin
             alucontrol = 10'b0;
             extensionModuleSelect = 3'b0;
         end
-        //extension
+        //extension, rd, rs1, rs2
         5'b00010: begin
             regWE = funct3==3'd3;
-            outmem = 1'b0;
+            outmem = funct3==3'd5;
             aluneg = 1'b0;
             isImm = 1'b0;
             immtype = 2'b0;
@@ -188,13 +190,39 @@ always_comb begin
             pcWE = 1'b1;
             rwmem = 1'b0;
             memWE = 1'b0;
-            byteena = 4'b0000;
+            byteena = funct3==3'd5 ? 4'b0001 : 4'b0000;
             alucontrol = 10'b0;
             exaluEnable = 1'b1;
             exaluImm = funct3==3'd3;
+            exaluInsert = funct3==3'd5|funct3==3'd3;
             extensionModuleSelect = funct3;
             isEnableXD2R = funct3==3'd3;
-            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2;
+            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
+            isEnableR2XD = funct3==3'd4;
+        end
+        //extension, rd, rs1, imm
+        5'b01010: begin
+            regWE = 1'b0;
+            outmem = funct3==3'd5;
+            aluneg = 1'b0;
+            isImm = 1'b1;
+            immtype = 2'b0;
+            pcsr = 1'b1;
+            isoutr1 = 1'b1;
+            isbr = 1'b1;
+            isjal = 1'b0;
+            iswb = 1'b0;
+            pcWE = 1'b1;
+            rwmem = 1'b0;
+            memWE = 1'b0;
+            byteena = funct3==3'd5 ? 4'b0001 : 4'b0000;
+            alucontrol = 10'b0;
+            exaluEnable = 1'b1;
+            exaluImm = funct3==3'd3;
+            exaluInsert = funct3==3'd5|funct3==3'd3|funct3==3'd6;
+            extensionModuleSelect = funct3;
+            isEnableXD2R = funct3==3'd3|funct3==3'd6;
+            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
             isEnableR2XD = funct3==3'd4;
             //extensionModuleSelect
             // 0 -> disable
