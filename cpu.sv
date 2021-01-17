@@ -58,10 +58,11 @@ rom rom(
     .A(RPC),
     .RD(INST)
 );
+
 /*
 onchiprom rom(
     .clock(CLK_FT),
-    .address(shiftedPC),
+    .address(10'(shiftedPC>>2)),
     .q(INST)
 );*/
 logic isEnableXD2R;

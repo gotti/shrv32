@@ -180,7 +180,7 @@ always_comb begin
             regWE = funct3==3'd3;
             outmem = funct3==3'd5;
             aluneg = 1'b0;
-            isImm = 1'b1;
+            isImm = 1'b0;
             immtype = 2'b0;
             pcsr = 1'b1;
             isoutr1 = 1'b1;

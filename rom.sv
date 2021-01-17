@@ -7,7 +7,7 @@ logic [4:0]counter=5'b0;
 logic [31:0]insts[31:0];
 initial $readmemh("../asm-gtrv32/bin",insts);
 always_ff @(posedge CLK) begin
-    //RD <= insts[A>>2];
+    RD <= insts[A>>2];
     /*case (A>>2)
             /*
         32'h0: RD<=32'h04300193;
