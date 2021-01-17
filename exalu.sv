@@ -1,6 +1,5 @@
 module exalu(
     input var logic we,
-    input var logic exaluImm,
     input var logic clock,
     input var logic [2:0]alucontrol,
     input var logic [255:0]D1,
@@ -85,22 +84,25 @@ end
 //                alucontrol==3'h2 ? invAesPlaintextOut : 128'h0};
 
 logic [255:0]shiftedD1;
-assign shiftedD1 = D1>>D2;
 always_comb begin
     exaluOut = 0;
     case(alucontrol)
         3'h0: begin
         end
-        3'h1: begin
+        3'h1: begin//aes128encrypt rd, rs1, rs2 // rd=aes128enc(plaintext=rs1,secret=rs2)
             exaluOut = {128'b0,aesCipherOut};
         end
-        3'h2: begin
+        3'h2: begin//aes128decrypt rd, rs1, rs2 // rd=aes128dec(cipher=rs1, secret=rs2)
             exaluOut = {128'b0,invAesPlaintextOut};
         end
-        3'h3: begin
-            exaluOut = shiftedD1&256'hffffffff;
+        3'h3: begin//256bit register to 32bit register, with shift
+            exaluOut = (D1>>D2)&256'hffffffff;
         end
-        3'h4: begin
+        3'h5: begin//load 1 byte from memory to register
+            exaluOut = (D1<<8)+(D2&256'hff);
+        end
+        3'h6: begin//256bit register to 32bit register, with shift
+            exaluOut = (D1>>D2)&256'hffffffff;
         end
         default: begin
         end
