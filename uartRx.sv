@@ -37,12 +37,13 @@ logic [1:0] state, nextState;
 logic [3:0] receptionCounter, nextReceptionCounter;
 logic [1:0] timingCounter, nextTimingCounter;
 logic [9:0] register, nextRegister;
-assign buffer = register[8:1];
+logic [7:0] nextBuffer;
 always_comb begin
     busy = 1'b0;
     fin = 1'b0;
     nextRegister = register;
     nextState = state;
+    nextBuffer = buffer;
     nextReceptionCounter = receptionCounter;
     case (state)
         2'd0: begin //idle
@@ -67,6 +68,7 @@ always_comb begin
             fin = 1'b1;
             busy = 1'b0;
             nextState = 2'd0;
+            nextBuffer = register[8:1];
             nextReceptionCounter = 0;
         end
         default: begin
@@ -81,6 +83,7 @@ always_ff @(posedge clk or negedge reset) begin
     end else begin
         state <= nextState;
         register <= nextRegister;
+        buffer <= nextBuffer;
         receptionCounter <= nextReceptionCounter;
     end
 end

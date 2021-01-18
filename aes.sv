@@ -4,6 +4,9 @@ module aes(
     input var logic [127:0] plaintext,
     input var logic [127:0] secret,
     input var logic we,
+    input var logic [127:0] nextRoundKey,
+    output var logic [3:0] keyCounter,
+    output var logic [127:0] currentRoundKey,
     output var logic [127:0] cipher,
     output var logic busy
 );
@@ -41,20 +44,15 @@ assign out = counter==4'ha ? shiftRowsOut : mixColumnsOut;
 assign roundOut = out ^ roundKey; //TODO
 //TODO
 logic [127:0]roundKey;
-logic [127:0]currentRoundKey;
 assign currentRoundKey = counter==4'd0 ? secret : roundKey;
-logic [127:0]nextRoundKey;
-keyExpand keyExpand(
-    .roundKey(currentRoundKey),
-    .counter(counter),
-    .nextRoundKey(nextRoundKey)
-);
+
 typedef enum{
     stateIdle,
     stateCalc
 } stateType;
 stateType state, nextState;
 assign cipher = dataReg;
+assign keyCounter = counter;
 always_comb begin
     busy = 0;
     nextCounter = 0;

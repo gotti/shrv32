@@ -5,6 +5,9 @@ module invAes(
     input var logic [127:0] secret,
     input var logic [127:0] cipher,
     input var logic we,
+    input var logic [127:0] nextRoundKeyIn,
+    output var logic [3:0] keyCounter,
+    output var logic [127:0] currentRoundKeyOut,
     output var logic busy
     );
 
@@ -13,6 +16,7 @@ logic [3:0]counter, nextCounter;
 //endfunction
 logic [127:0]secretReg;
 logic [127:0]dataReg, nextDataReg;
+logic [127:0]currentRoundKey, nextRoundKey;
 
 logic [127:0]subBytesIn;
 logic [127:0]subBytesOut;
@@ -41,15 +45,7 @@ assign roundOut = subBytesOut; //TODO
 //TODO
 //
 logic [127:0] roundKey [10:0];
-logic [127:0] currentRoundKey,nextRoundKey;
-
-logic [127:0]keyExpand0In;
-logic [127:0]keyExpand0Out;
-keyExpand keyExpand0(
-    .roundKey(keyExpand0In),
-    .counter(counter-1),
-    .nextRoundKey(keyExpand0Out)
-);
+assign keyCounter = counter-1;
 
 typedef enum{
     stateIdle,
@@ -64,7 +60,7 @@ always_comb begin
     nextState = state;
     nextDataReg = dataReg;
     nextRoundKey = roundKey[counter];
-    keyExpand0In = 0;
+    currentRoundKeyOut = 0;
     if(state == stateIdle && we) begin
         nextState = statePreCalc;
         busy = 1;
@@ -75,8 +71,8 @@ always_comb begin
             nextState = stateCalc;
             nextCounter = 0;
         end else begin
-            keyExpand0In = currentRoundKey;
-            nextRoundKey = keyExpand0Out;
+            currentRoundKeyOut = currentRoundKey;
+            nextRoundKey = nextRoundKeyIn;
             nextCounter = counter +1;
         end
     end else if (state == stateCalc) begin
