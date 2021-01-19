@@ -97,7 +97,7 @@ always_ff @(posedge clock) begin
         currentRoundKey <= counter==4'b0 ? secret : nextRoundKey;
         roundKey[10] <= secret;
     end else if(state == stateCalc) begin
-        dataReg <= counter==4'd0 ? cipher : nextDataReg;
+        dataReg <= counter==4'd0 ? cipher : counter==4'd11 ? nextDataReg^secret : nextDataReg;
     end
 end
 /*

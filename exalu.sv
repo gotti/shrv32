@@ -54,19 +54,16 @@ keyExpand keyExpand(
     .nextRoundKey(aesNextRoundKey)
 );
 
-logic nextBusy;
+assign busy = aesBusy|invAesBusy;
 always_comb begin
     aesWE = 0;
     invAesWE = 0;
     nextAesState = aesState;
     nextInvAesState = invAesState;
-    nextUsingInvAes = usingInvAes;
-    nextBusy = busy;
     if(we==1'b1) begin
         case (alucontrol[2:0])
             3'h1: begin
                 if(aesState == stateCalc) begin
-                    nextBusy = 1'b1;
                     nextAesState = stateWait;
                     aesWE = 1;
                 end else if(aesState == stateWait) begin
@@ -76,25 +73,19 @@ always_comb begin
                     end
                 end else begin
                     nextAesState = stateCalc;
-                    nextBusy = 1'b0;
                 end
             end
             3'h2: begin
                 if(invAesState == stateCalc) begin
-                    nextBusy = 1'b1;
-                    nextUsingInvAes = 1'b1;
                     nextInvAesState = stateWait;
                     invAesWE = 1;
                 end else if(invAesState == stateWait) begin
-                    nextUsingInvAes = 1'b1;
                     if(invAesBusy) begin
                     end else begin
                         nextInvAesState = stateFin;
                     end
                 end else if(invAesState == stateFin) begin
-                    nextUsingInvAes = 1'b0;
                     nextInvAesState = stateCalc;
-                    nextBusy = 1'b0;
                 end
             end
             default: begin
@@ -107,6 +98,7 @@ end
 //                alucontrol==3'h2 ? invAesPlaintextOut : 128'h0};
 
 logic [255:0]shiftedD1;
+assign usingInvAes = invAesBusy;
 always_comb begin
     exaluOut = 0;
     case(alucontrol)
@@ -134,7 +126,5 @@ end
 always_ff @(posedge clock) begin
     aesState <= nextAesState;
     invAesState <= nextInvAesState;
-    usingInvAes <= nextUsingInvAes;
-    busy <= nextBusy;
 end
 endmodule

@@ -37,7 +37,7 @@ uartTx uartTx(
     .we(uartWE),
     //.we(generalRegisters[31][8])
     .uartTxPin(uartTxPin),
-    .busy(uartTxBusy)
+    .busy2(uartTxBusy)
 );
 
 logic [7:0] uartRxOut, uartRxBuffer;
@@ -81,13 +81,13 @@ always_ff @(posedge uartRxRead or posedge uartRxFin) begin
 end
 
 assign uartTxIn = data[7:0];
-always_ff @(posedge clock) begin
-    memaddr <= vaddr;
-    ramWE <= 0;
-    ramByteEnable <= 0;
-    uartWE <= 0;
-    q <= 32'b0;
-    uartRxRead <= 1'b0;
+always_comb begin
+    memaddr = vaddr;
+    uartWE = 0;
+    uartRxRead = 1'b0;
+    q = memout;
+    ramByteEnable = byteena;
+    ramWE = 1'b0;
     //0x200 status register
     //0x201 Rx buffer
     //0x202 Tx buffer
@@ -101,17 +101,17 @@ always_ff @(posedge clock) begin
     //Before read received data, check RxReady is high
     if (32'h200<=vaddr && vaddr<=32'h202) begin
         if (32'h200==vaddr) begin
-            q <= {30'b0,uartTxBusy,uartRxReady};
+            q = {30'b0,uartTxBusy,uartRxReady};
         end else if (32'h201==vaddr) begin
-            uartWE <= 1'b1;
+            uartWE = 1'b1&clock;
         end else if (32'h202==vaddr) begin
-            uartRxRead <= 1'b1;
-            q <= {24'h0,uartRxOut};
+            uartRxRead = 1'b1;
+            q = {24'h0,uartRxOut};
         end
     end else begin //TODO: たぶんクロックの関係でバグる
-        q <= memout;
-        ramWE <= memWE;
-        ramByteEnable <= byteena;
+        q = memout;
+        ramWE = memWE;
+        ramByteEnable = byteena;
     end
 end
 //address convertion

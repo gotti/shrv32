@@ -25,6 +25,7 @@ module controller(
     output var logic [2:0]extensionModuleSelect,
     output var logic isEnableR2XD,
     output var logic isEnableXD2R,
+    output var logic usingDirectImmIn,
     output var logic reg256WE
 );
 
@@ -37,6 +38,7 @@ always_comb begin
         isEnableXD2R = 1'b0;
         reg256WE = 1'b0;
         brImmType = 1'b0;
+        usingDirectImmIn = 1'b0;
     case (opcode)
         //R-Type https://inst.eecs.berkeley.edu/~cs61c/resources/su18_lec/Lecture7.pdf
         5'b01100: begin
@@ -227,6 +229,7 @@ always_comb begin
             isEnableXD2R = funct3==3'd3|funct3==3'd6;
             reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
             isEnableR2XD = funct3==3'd4;
+            usingDirectImmIn = funct3==3'd5;
             //extensionModuleSelect
             // 0 -> disable
             // 1 -> aes-128 encrypt

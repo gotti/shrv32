@@ -51,24 +51,24 @@ always_comb begin
                 busy = 1'b1;
                 nextReceptionCounter = 4'd0;
                 nextRegister = {uartRxPin,register[9:1]};
-                nextState = 2'd2; //startbit
+                nextState = 2'd2;
             end
         end
         2'd2: begin
             busy = 1'b1;
-            nextRegister = {uartRxPin,register[9:1]};
             if (receptionCounter == 4'd9) begin
                 nextState = 2'd3; //fin
                 nextReceptionCounter = 4'd0;
+                nextBuffer = register[8:1];
             end else begin
+                nextRegister = {uartRxPin,register[9:1]};
                 nextReceptionCounter = receptionCounter+1;
             end
         end
         2'd3: begin
             fin = 1'b1;
-            busy = 1'b0;
+            busy = 1'b1;
             nextState = 2'd0;
-            nextBuffer = register[8:1];
             nextReceptionCounter = 0;
         end
         default: begin

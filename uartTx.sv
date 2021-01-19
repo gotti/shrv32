@@ -4,12 +4,12 @@ module uartTx(
     input var logic [7:0]buffer,
     input var logic we,
     output var logic uartTxPin,
-    output var logic busy
+    output var logic busy2
 );
 logic clk;
 logic [10:0]divCounter = 11'b0;
 logic lwe;
-
+logic busy;
 always_ff @(posedge clock) begin
     if (we==1'b1 && busy==1'b0) begin
         lwe <= 1'b1;
@@ -42,6 +42,7 @@ always_ff @(posedge we or negedge busy) begin
 end
 */
 always_comb begin
+    busy2 = 1'b0;
     uartTxPin = 1'b1;
     nextRegister = register;
     nextState = state;
@@ -50,18 +51,22 @@ always_comb begin
         2'd0: begin //idle
             if(lwe==1'b1) begin
                 busy = 1'b1;
+                busy2 = 1'b1;
                 nextRegister = txBuffer;
                 nextState = 2'd1; //startbit
             end else begin
                 busy = 1'b0;
+                busy2 = 1'b0;
             end
         end
         2'd1: begin
+                busy2 = 1'b1;
                 busy = 1'b1;
                 nextState = 2'd2; //transmit
         end
         2'd2: begin //
             busy = 1'b1;
+            busy2 = 1'b1;
             if (transmissionCounter == 4'd9) begin
                 nextState = 2'd3; //fin
                 nextTransmissionCounter = 4'd0;
@@ -72,6 +77,7 @@ always_comb begin
             end
         end
         2'd3: begin
+            busy2 = 1'b1;
             busy = 1'b0;
             nextState = 2'd0;
             nextTransmissionCounter = 0;

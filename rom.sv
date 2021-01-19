@@ -1,3 +1,4 @@
+
 module rom(
     input var logic CLK,
     input var logic [31:0]A,

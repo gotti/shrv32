@@ -52,13 +52,11 @@ mockrom rom(
     .address(RPC>>2),
     .q(INST)
 );*/
-
 rom rom(
     .CLK(CLK_FT),
     .A(RPC),
     .RD(INST)
 );
-
 /*
 onchiprom rom(
     .clock(CLK_FT),
@@ -118,7 +116,7 @@ logic memWE = 1'b0;
 logic [3:0]byteena;
 logic exaluEnable;
 logic [2:0] extensionModuleSelect;
-logic exaluImm, exaluInsert, exaluD2Insert;
+logic exaluImm, exaluInsert, exaluD2Insert, usingDirectImmIn;
 controller controller(
     .opcode(INST[6:2]),
     .funct3(INST[14:12]),
@@ -146,6 +144,7 @@ controller controller(
     .extensionModuleSelect(extensionModuleSelect),
     .isEnableR2XD(isEnableR2XD),
     .isEnableXD2R(isEnableXD2R),
+    .usingDirectImmIn(usingDirectImmIn),
     .reg256WE(reg256WE)
 );
 logic [31:0]aluout;
@@ -187,7 +186,7 @@ mmu mmu(
     .rawClock(CLK),
     .clock(CLK_MA),
     .RST(RST),
-    .vaddr(aluout),
+    .vaddr(usingDirectImmIn==1'b1 ? {20'b0,INST[31:20]} : aluout),
     .data(D2),
     .byteena(byteena),
     .memWE(memWE),
