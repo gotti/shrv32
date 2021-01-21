@@ -181,7 +181,7 @@ always_comb begin
         end
         //extension, rd, rs1, rs2
         5'b00010: begin
-            regWE = funct3==3'd3|funct3==3'd6;
+            regWE = funct3==3'd3;
             outmem = funct3==3'd5;
             aluneg = 1'b0;
             isImm = 1'b0;
@@ -198,10 +198,10 @@ always_comb begin
             alucontrol = 10'b0;
             exaluEnable = 1'b1;
             exaluImm = funct3==3'd3;
-            exaluInsert = funct3==3'd5|funct3==3'd3|funct3==3'd6;
-            exaluD2Insert = funct3==3'd6;
+            exaluInsert = funct3==3'd5|funct3==3'd3;
+            exaluD2Insert = funct3==3'd3;
             extensionModuleSelect = funct3;
-            isEnableXD2R = funct3==3'd3|funct3==3'd6;
+            isEnableXD2R = funct3==3'd3;
             reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
             isEnableR2XD = funct3==3'd4;
         end
@@ -226,7 +226,7 @@ always_comb begin
             exaluImm = funct3==3'd3;
             exaluInsert = funct3==3'd5|funct3==3'd3;
             extensionModuleSelect = funct3;
-            isEnableXD2R = funct3==3'd3|funct3==3'd6;
+            isEnableXD2R = funct3==3'd3;
             reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
             isEnableR2XD = funct3==3'd4;
             usingDirectImmIn = funct3==3'd5;

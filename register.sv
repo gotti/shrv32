@@ -15,7 +15,29 @@ module register(
 );
 
 logic [31:0] generalRegisters [31:0];
-assign LED[7:0] = generalRegisters[31][7:0];
+assign LED[7:2] = generalRegisters[31][7:2];
+assign LED[0] = lro0q;
+logic en, lro0q, ro0q;
+assign en = 1;
+ro ro2(
+    .en(en),
+    .q(ro0q)
+);
+ro ro3(
+    .en(en),
+    .q(ro1q)
+);
+logic [127:0] rocounter;
+always_ff @(posedge CLK) begin
+    if (rocounter==10'd12000000) begin
+        lro0q <= ro0q ^ ro1q;
+        LED[1] <= ~LED[1];
+        rocounter <= 0;
+    end else begin
+        rocounter <= rocounter +1;
+    end
+end
+
 logic [31:0]d1;
 logic [31:0]d2;
 assign RD1 = d1;

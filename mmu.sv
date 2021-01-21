@@ -1,3 +1,4 @@
+/* verilator lint_off UNOPTFLAT */
 module mmu(
     input var logic rawClock,
     input var logic clock,
@@ -49,6 +50,26 @@ uartRx uartRx(
     .uartRxPin(uartRxPin),
     .fin(uartRxFin)
 );
+
+logic en, lro0q, ro0q;
+assign en = 1;
+ro ro0(
+    .en(en),
+    .q(ro0q)
+);
+ro ro1(
+    .en(en),
+    .q(ro1q)
+);
+logic [9:0] rocounter1;
+always_ff @(posedge clock) begin
+    if (rocounter1==0) begin
+        lro0q <= ro0q ^ ro1q;
+    end else begin
+        rocounter1 <= rocounter1 +1;
+    end
+end
+
 /*
 always_comb begin
     memaddr = vaddr;
@@ -99,7 +120,7 @@ always_comb begin
     //RxReady is high when there is received and unread data
     //Before transmit data, check TxBusy is low
     //Before read received data, check RxReady is high
-    if (32'h200<=vaddr && vaddr<=32'h202) begin
+    if (32'h200<=vaddr && vaddr<=32'h203) begin
         if (32'h200==vaddr) begin
             q = {30'b0,uartTxBusy,uartRxReady};
         end else if (32'h201==vaddr) begin
@@ -107,6 +128,8 @@ always_comb begin
         end else if (32'h202==vaddr) begin
             uartRxRead = 1'b1;
             q = {24'h0,uartRxOut};
+        end else if (32'h203==vaddr) begin
+            q = {31'h0,lro0q};
         end
     end else begin //TODO: たぶんクロックの関係でバグる
         q = memout;
@@ -169,4 +192,15 @@ mockram ram(
     .q(memout)
 );
 */
+endmodule
+
+module ro(
+    input var logic en,
+    output var logic q
+);
+logic w1, w2, w3;
+assign w1 = en ^ w3;
+assign w2 = ~w1;
+assign w3 = ~w2;
+assign q = w1;
 endmodule

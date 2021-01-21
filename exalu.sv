@@ -102,7 +102,8 @@ assign usingInvAes = invAesBusy;
 always_comb begin
     exaluOut = 0;
     case(alucontrol)
-        3'h0: begin
+        3'h0: begin//add D1, D2 for use of AES-CBC IV or other general use
+            exaluOut = D1 + D2;
         end
         3'h1: begin//aes128encrypt rd, rs1, rs2 // rd=aes128enc(plaintext=rs1,secret=rs2)
             exaluOut = {128'b0,aesCipherOut};
@@ -118,6 +119,9 @@ always_comb begin
         end
         3'h6: begin//256bit register to 32bit register, with shift
             exaluOut = (D1>>D2)&256'hffffffff;
+        end
+        3'h7: begin//xor D1 and D2, for use of AES-CBC IV
+            exaluOut = D1 ^ D2;
         end
         default: begin
         end
