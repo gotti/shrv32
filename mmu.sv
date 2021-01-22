@@ -51,25 +51,60 @@ uartRx uartRx(
     .fin(uartRxFin)
 );
 
-logic en, lro0q, ro0q;
+logic en, roclkq;
 assign en = 1;
-ro ro0(
+ro roclk(
     .en(en),
-    .q(ro0q)
+    .q(roclkq)
 );
-ro ro1(
-    .en(en),
-    .q(ro1q)
-);
-logic [9:0] rocounter1;
-always_ff @(posedge clock) begin
-    if (rocounter1==0) begin
-        lro0q <= ro0q ^ ro1q;
+
+logic [9:0] rocounter;
+logic roclock;
+always_ff @(posedge rawClock) begin
+    if (rocounter==10'd50) begin
+        rocounter <= 0;
+        roclock <= ~roclock;
     end else begin
-        rocounter1 <= rocounter1 +1;
+        rocounter <= rocounter +1;
     end
 end
 
+parameter RONUMBER=120;
+logic [63:0]randomRegister;
+always_ff @(posedge roclock) begin
+    randomRegister <= {xroq[RONUMBER],randomRegister[63:1]};
+end
+
+logic [RONUMBER-1:0]roq;
+logic [RONUMBER:0]xroq;
+
+genvar i;
+generate
+for(i=0; i<RONUMBER; i=i+1) begin: generateRO
+    rod rod(
+        .clock(roclock),
+        .en(en),
+        .q(roq[i])
+    );
+    assign xroq[i+1]=xroq[i]^roq[i];
+end
+endgenerate
+
+logic randomRead;
+logic randomBusy;
+logic [199:0]randomCoolDown;
+always_ff @(posedge rawClock) begin
+    if(randomRead==1'b1) begin
+        randomBusy <= 1'b1;
+        randomCoolDown <= 100*32+100;
+    end
+    if(randomCoolDown!=0) begin
+        randomCoolDown <= randomCoolDown -1;
+        randomBusy <= 1'b1;
+    end else begin
+        randomBusy <= 1'b0;
+    end
+end
 /*
 always_comb begin
     memaddr = vaddr;
@@ -109,12 +144,13 @@ always_comb begin
     q = memout;
     ramByteEnable = byteena;
     ramWE = 1'b0;
+    randomRead = 1'b0;
     //0x200 status register
     //0x201 Rx buffer
     //0x202 Tx buffer
     // 0x200 status register mapping
-    // |7          2|1     |0      |
-    // |--not used--|Txbusy|RxReady|
+    // |31        |30         2|1     |0      |
+    // |randomBusy|--not used--|Txbusy|RxReady|
     //
     //TxBusy is high when transmitting data, do not write to buffer
     //RxReady is high when there is received and unread data
@@ -122,14 +158,15 @@ always_comb begin
     //Before read received data, check RxReady is high
     if (32'h200<=vaddr && vaddr<=32'h203) begin
         if (32'h200==vaddr) begin
-            q = {30'b0,uartTxBusy,uartRxReady};
+            q = {27'b0,randomBusy,2'b0,uartTxBusy,uartRxReady};
         end else if (32'h201==vaddr) begin
             uartWE = 1'b1&clock;
         end else if (32'h202==vaddr) begin
             uartRxRead = 1'b1;
             q = {24'h0,uartRxOut};
         end else if (32'h203==vaddr) begin
-            q = {31'h0,lro0q};
+            q = randomRegister;
+            randomRead = 1'b1;
         end
     end else begin //TODO: たぶんクロックの関係でバグる
         q = memout;
@@ -192,6 +229,20 @@ mockram ram(
     .q(memout)
 );
 */
+endmodule
+
+module rod(
+    input var logic clock,
+    input var logic en,
+    output var logic q
+);
+logic w1, w2, w3;
+assign w1 = en ^ w3;
+assign w2 = ~w1;
+assign w3 = ~w2;
+always_ff @(posedge clock) begin
+    q <= w1;
+end
 endmodule
 
 module ro(
