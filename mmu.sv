@@ -168,7 +168,7 @@ always_comb begin
             q = randomRegister;
             randomRead = 1'b1;
         end
-    end else begin //TODO: たぶんクロックの関係でバグる
+    end else begin
         q = memout;
         ramWE = memWE;
         ramByteEnable = byteena;

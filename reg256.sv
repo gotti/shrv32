@@ -11,19 +11,19 @@ module reg256(
     output var logic [255:0]RD1,
     output var logic [255:0]RD2
 );
-logic [255:0] generalRegisters [3:0];
+logic [255:0] generalRegisters [5:0];
 
 always_ff @(posedge CLK_DC) begin
-    RD1 <= generalRegisters[A1[1:0]];
-    RD2 <= generalRegisters[A2[1:0]];
+    RD1 <= generalRegisters[A1[2:0]];
+    RD2 <= generalRegisters[A2[2:0]];
 end
 
 always_ff @(posedge CLK_WB or negedge RST) begin
     if (!RST) begin
-        generalRegisters <= '{256'h0, 256'h0, 256'h0, 256'h0};
+        generalRegisters <= '{256'h0, 256'h0, 256'h0, 256'h0, 256'h0, 256'h0};
         //R31 <= 0;
     end else if (WE==1'b1) begin
-        generalRegisters[A3[1:0]] <= WB;
+        generalRegisters[A3[2:0]] <= WB;
     end
 end
 
