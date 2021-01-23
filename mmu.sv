@@ -60,7 +60,7 @@ ro roclk(
 
 logic [9:0] rocounter;
 logic roclock;
-always_ff @(posedge rawClock) begin
+always_ff @(posedge roclkq) begin
     if (rocounter==10'd50) begin
         rocounter <= 0;
         roclock <= ~roclock;
@@ -70,9 +70,9 @@ always_ff @(posedge rawClock) begin
 end
 
 parameter RONUMBER=120;
-logic [63:0]randomRegister;
+logic [31:0]randomRegister;
 always_ff @(posedge roclock) begin
-    randomRegister <= {xroq[RONUMBER],randomRegister[63:1]};
+    randomRegister <= {xroq[RONUMBER],randomRegister[31:1]};
 end
 
 logic [RONUMBER-1:0]roq;
@@ -96,7 +96,7 @@ logic [199:0]randomCoolDown;
 always_ff @(posedge rawClock) begin
     if(randomRead==1'b1) begin
         randomBusy <= 1'b1;
-        randomCoolDown <= 100*32+100;
+        randomCoolDown <= 50*32+100;
     end
     if(randomCoolDown!=0) begin
         randomCoolDown <= randomCoolDown -1;
@@ -128,7 +128,7 @@ always_comb begin
 end
 */
 logic uartRxReady, uartRxRead;
-always_ff @(posedge uartRxRead or posedge uartRxFin) begin
+always_ff @(posedge uartRxRead or posedge uartRxFin) begin //この記述は許されるのか？
     if (uartRxRead==1'b1) begin
         uartRxReady <= 1'b0;
     end else if (uartRxFin==1'b1) begin
@@ -236,12 +236,12 @@ module rod(
     input var logic en,
     output var logic q
 );
-logic w1, w2, w3;
-assign w1 = en ^ w3;
-assign w2 = ~w1;
-assign w3 = ~w2;
+(* keep=1 *) logic a, b, c;
+assign a = ~(en & c);
+assign b = ~a;
+assign c = ~b;
 always_ff @(posedge clock) begin
-    q <= w1;
+    q <= a;
 end
 endmodule
 
@@ -249,9 +249,9 @@ module ro(
     input var logic en,
     output var logic q
 );
-logic w1, w2, w3;
-assign w1 = en ^ w3;
-assign w2 = ~w1;
-assign w3 = ~w2;
-assign q = w1;
+(* keep=1 *) logic a, b, c;
+assign a = ~(en & c);
+assign b = ~a;
+assign c = ~b;
+assign q = a;
 endmodule
