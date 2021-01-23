@@ -116,7 +116,7 @@ logic memWE = 1'b0;
 logic [3:0]byteena;
 logic exaluEnable;
 logic [2:0] extensionModuleSelect;
-logic exaluImm, exaluInsert, exaluD2Insert, usingDirectImmIn;
+logic exaluImm, exaluInsert, exaluD2Insert, usingDirectImmIn, directmmuInsert;
 controller controller(
     .opcode(INST[6:2]),
     .funct3(INST[14:12]),
@@ -144,6 +144,7 @@ controller controller(
     .extensionModuleSelect(extensionModuleSelect),
     .isEnableR2XD(isEnableR2XD),
     .isEnableXD2R(isEnableXD2R),
+    .directmmuInsert(directmmuInsert),
     .usingDirectImmIn(usingDirectImmIn),
     .reg256WE(reg256WE)
 );
@@ -186,7 +187,7 @@ mmu mmu(
     .rawClock(CLK),
     .clock(CLK_MA),
     .RST(RST),
-    .vaddr(usingDirectImmIn==1'b1 ? {20'b0,INST[31:20]} : aluout),
+    .vaddr(directmmuInsert==1'b1 ? D2 : usingDirectImmIn==1'b1 ? {20'b0,INST[31:20]} : aluout),
     .data(D2),
     .byteena(byteena),
     .memWE(memWE),

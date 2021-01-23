@@ -20,7 +20,7 @@ end
 
 always_ff @(posedge CLK_WB or negedge RST) begin
     if (!RST) begin
-        generalRegisters <= '{256'h0, 256'h0, 256'h0, 256'h0, 256'h0, 256'h0};
+        generalRegisters <= '{256'h0, 256'h10, 256'h0, 256'h0, 256'h0, 256'h0};
         //R31 <= 0;
     end else if (WE==1'b1) begin
         generalRegisters[A3[2:0]] <= WB;

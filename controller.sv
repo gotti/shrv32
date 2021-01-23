@@ -25,6 +25,7 @@ module controller(
     output var logic [2:0]extensionModuleSelect,
     output var logic isEnableR2XD,
     output var logic isEnableXD2R,
+    output var logic directmmuInsert,
     output var logic usingDirectImmIn,
     output var logic reg256WE
 );
@@ -38,6 +39,7 @@ always_comb begin
         isEnableXD2R = 1'b0;
         reg256WE = 1'b0;
         brImmType = 1'b0;
+        directmmuInsert = 1'b0;
         usingDirectImmIn = 1'b0;
     case (opcode)
         //R-Type https://inst.eecs.berkeley.edu/~cs61c/resources/su18_lec/Lecture7.pdf
@@ -195,14 +197,15 @@ always_comb begin
             rwmem = 1'b0;
             memWE = 1'b0;
             byteena = funct3==3'd5 ? 4'b0001 : 4'b0000;
-            alucontrol = 10'b0;
+            alucontrol = funct3==3'd5 ? 10'd0 : 10'd0 ;
             exaluEnable = 1'b1;
-            exaluImm = funct3==3'd3;
+            exaluImm = 1'b0;
             exaluInsert = funct3==3'd5|funct3==3'd3;
             exaluD2Insert = funct3==3'd3;
             extensionModuleSelect = funct3;
             isEnableXD2R = funct3==3'd3;
             reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
+            directmmuInsert = funct3==3'd5;
             isEnableR2XD = funct3==3'd4;
         end
         //extension, rd, rs1, imm
@@ -223,11 +226,11 @@ always_comb begin
             byteena = funct3==3'd5 ? 4'b0001 : 4'b0000;
             alucontrol = 10'b0;
             exaluEnable = 1'b1;
-            exaluImm = funct3==3'd3;
-            exaluInsert = funct3==3'd5|funct3==3'd3;
+            exaluImm = funct3==3'd3|funct3==3'd0;
+            exaluInsert = funct3==3'd5|funct3==3'd3|funct3==3'd0;
             extensionModuleSelect = funct3;
             isEnableXD2R = funct3==3'd3;
-            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
+            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5|funct3==3'd0;
             isEnableR2XD = funct3==3'd4;
             usingDirectImmIn = funct3==3'd5;
             //extensionModuleSelect
