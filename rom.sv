@@ -6,7 +6,7 @@ module rom(
 
 logic [4:0]counter=5'b0;
 logic [31:0]insts[255:0];
-initial $readmemh("../asm-gtrv32/bin",insts);
+initial $readmemh("./bin",insts);
 always_ff @(posedge CLK) begin
     RD <= insts[A>>2];
     /*case (A>>2)
