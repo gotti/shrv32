@@ -17,7 +17,7 @@ always_ff @(posedge clock) begin
     end else if(we==1'b0 && busy==1'b0) begin
         lwe <= 1'b0;
     end
-    if (divCounter==11'd52-1) begin
+    if (divCounter==11'd104-1) begin
         divCounter <= 11'd0;
         clk <= ~clk;
     end else begin

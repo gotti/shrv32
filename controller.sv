@@ -139,8 +139,7 @@ always_comb begin
             pcWE = 1'b1;
             memWE = 1'b0;
             rwmem = 1'b1;
-            //byteena = funct3==3'b000 ? 4'b0001 : funct3==3'b001 ? 4'b0011 : funct3==3'b010 ? 4'b1111 : 4'b0000;
-            byteena = 4'b0;
+            byteena = funct3==3'b000 ? 4'b0001 : funct3==3'b001 ? 4'b0011 : funct3==3'b010 ? 4'b1111 : 4'b0000;
             alucontrol = 10'b0;
             extensionModuleSelect = 3'b0;
         end
@@ -204,7 +203,7 @@ always_comb begin
             exaluD2Insert = funct3==3'd3;
             extensionModuleSelect = funct3;
             isEnableXD2R = funct3==3'd3;
-            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5;
+            reg256WE = funct3==3'd4|funct3==3'd1|funct3==3'd2|funct3==3'd5|funct3==3'd7;
             directmmuInsert = funct3==3'd5;
             isEnableR2XD = funct3==3'd4;
         end

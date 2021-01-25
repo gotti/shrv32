@@ -7,7 +7,7 @@ module mockram(
     input var wren,
     output var [31:0]q
 );
-logic [31:0]ramdata[7:0];
+logic [31:0]ramdata[255:0];
 always_ff @(posedge clock) begin
     if(wren==1'b1) begin
         ramdata[address] <= {(byteena>>3)&1==1 ? ((data>>24)&8'hff) : ((ramdata[address]>>24)&8'hff),
