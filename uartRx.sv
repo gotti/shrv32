@@ -22,7 +22,7 @@ always_ff @(posedge clock) begin
 end
 always_ff @(posedge clock) begin
     if (receptionEnable==1'b1) begin
-        if (divCounter==11'd104-1) begin //これで115200bps
+        if (divCounter==11'd104-1) begin //これで57600bps
             divCounter <= 11'd0;
             clk <= ~clk;
         end else begin
