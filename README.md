@@ -1,4 +1,6 @@
 # shrv32
+[![SecHack365](https://img.shields.io/badge/SecHack365-2020-ffd700.svg)](https://sechack365.nict.go.jp/)
+
 暗号アクセラレータなどを搭載したRISC-V，RV32Iと暗号拡張命令を実装．
 
 # 使いかた．
